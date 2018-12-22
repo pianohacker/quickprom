@@ -32,7 +32,7 @@ func main() {
 	failIfErr("%s", err)
 
 	if fs.Arg(0) == "" {
-		flag.Usage()
+		fs.Usage()
 		os.Exit(2)
 	}
 
