@@ -13,6 +13,8 @@ import (
 	"github.com/namsral/flag"
 	"github.com/prometheus/client_golang/api"
 	"github.com/prometheus/client_golang/api/prometheus/v1"
+
+	"github.com/pianohacker/quickprom/output"
 )
 
 func main() {
@@ -57,7 +59,7 @@ func main() {
 	value, err := promClient.Query(ctx, query, time.Now())
 	failIfErr("Failed to run query: %s", err)
 
-	outputValue(value)
+	output.OutputValue(value)
 }
 
 func fail(msg string, args ...interface{}) {
