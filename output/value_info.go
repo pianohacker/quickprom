@@ -26,6 +26,19 @@ func VectorInfo(vector model.Vector) *ValueInfo {
 	return v
 }
 
+func MatrixInfo(matrix model.Matrix) *ValueInfo {
+	v := &ValueInfo{
+		labelInfo: make(labelInfoMap),
+	}
+
+	for _, series := range matrix {
+		v.addMetric(series.Metric)
+	}
+	v.length = len(matrix)
+
+	return v
+}
+
 func (v *ValueInfo) GetCommonLabels() (unvaryingTags model.LabelSet) {
 	unvaryingTags = make(model.LabelSet)
 

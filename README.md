@@ -11,6 +11,8 @@ using the Prometheus API.
 
 ## TODO
 
-- [ ] Range vector support
+- [x] Range vector support
+- [ ] Range query support
+- [ ] Scalar support
 - [ ] Timestamp collapsing
 - [ ] Sparklines

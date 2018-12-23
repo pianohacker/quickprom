@@ -8,7 +8,7 @@ import (
 	"github.com/pianohacker/quickprom/output"
 )
 
-var _ = Describe("Labels", func() {
+var _ = Describe("Value Info", func() {
 	Describe("GetCommonLabels", func() {
 		It("includes common labels", func() {
 			Expect(output.VectorInfo(model.Vector{
@@ -64,6 +64,26 @@ var _ = Describe("Labels", func() {
 				},
 			}).GetCommonLabels()).To(Equal(model.LabelSet{
 				"shared-a": "a",
+			}))
+		})
+
+		It("supports range vectors", func() {
+			Expect(output.MatrixInfo(model.Matrix{
+				{
+					Metric: model.Metric{
+						"shared-a": "a",
+						"shared-b": "b",
+					},
+				},
+				{
+					Metric: model.Metric{
+						"shared-a": "a",
+						"shared-b": "b",
+					},
+				},
+			}).GetCommonLabels()).To(Equal(model.LabelSet{
+				"shared-a": "a",
+				"shared-b": "b",
 			}))
 		})
 	})
