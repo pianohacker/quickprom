@@ -2,12 +2,17 @@ package output
 
 import (
 	"fmt"
+	"os"
+	"sort"
+	"strings"
 
+	"github.com/mattn/go-isatty"
+	"github.com/olekukonko/tablewriter"
 	"github.com/prometheus/common/model"
 )
 
-const timestampFormat = "2006-01-02 15:04:05.999 MST"
-const shortTimestampFormat = "2006-01-02 15:04:05.999"
+const timestampFormat = "2006-01-02 15:04:05.000 MST"
+const shortTimestampFormat = "2006-01-02 15:04:05.000"
 
 func OutputValue(value model.Value) {
 	switch value.Type() {
@@ -16,6 +21,11 @@ func OutputValue(value model.Value) {
 	case model.ValMatrix:
 		outputMatrix(value.(model.Matrix))
 	}
+}
+
+type tableOutput interface {
+	Append([]string)
+	Render()
 }
 
 func outputVector(vector model.Vector) {
@@ -27,6 +37,8 @@ func outputVector(vector model.Vector) {
 
 	fmt.Printf("@ %s:\n", vector[0].Timestamp.Time().Format(timestampFormat))
 	var commonLabels model.LabelSet
+	info := VectorInfo(vector)
+
 	if len(vector) > 1 {
 		commonLabels = VectorInfo(vector).GetCommonLabels()
 
@@ -35,10 +47,35 @@ func outputVector(vector model.Vector) {
 		}
 	}
 
-	for _, sample := range vector {
-		filterCommonLabels(sample.Metric, commonLabels)
-		fmt.Printf("%v: %f\n", sample.Metric, sample.Value)
+	var uncommonLabelSet []string
+
+	for labelName, _ := range info.labelInfo {
+		if _, ok := commonLabels[labelName]; ok {
+			continue
+		}
+
+		uncommonLabelSet = append(uncommonLabelSet, string(labelName))
 	}
+	sort.Sort(sort.StringSlice(uncommonLabelSet))
+
+	// Value column
+	header := append(uncommonLabelSet, "")
+
+	tw := getTableWriter(header)
+
+	for _, sample := range vector {
+		var row []string
+
+		for _, uncommonLabel := range uncommonLabelSet {
+			row = append(row, string(sample.Metric[model.LabelName(uncommonLabel)]))
+		}
+
+		row = append(row, fmt.Sprintf("%f", sample.Value))
+
+		tw.Append(row)
+	}
+
+	tw.Render()
 }
 
 func outputMatrix(matrix model.Matrix) {
@@ -47,7 +84,6 @@ func outputMatrix(matrix model.Matrix) {
 		fmt.Println("(empty result)")
 		return
 	}
-	fmt.Println("")
 
 	var commonLabels model.LabelSet
 	if len(matrix) > 1 {
@@ -67,6 +103,51 @@ func outputMatrix(matrix model.Matrix) {
 		}
 	}
 }
+
+func getTableWriter(header []string) tableOutput {
+	if outputIsATty {
+		tw := tablewriter.NewWriter(os.Stdout)
+		tw.SetHeader(header)
+		tw.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+		tw.SetHeaderLine(false)
+		tw.SetAutoFormatHeaders(false)
+		tw.SetBorder(false)
+		tw.SetCenterSeparator("")
+		tw.SetColumnSeparator("")
+		tw.SetRowSeparator("")
+
+		var headerColors []tablewriter.Colors
+
+		for range header {
+			headerColors = append(headerColors, tablewriter.Colors{tablewriter.Bold})
+		}
+
+		tw.SetHeaderColor(headerColors...)
+
+		return tw
+	} else {
+		return &dumbTableWriter{
+			header: header,
+		}
+	}
+}
+
+var outputIsATty = isatty.IsTerminal(os.Stdout.Fd())
+
+type dumbTableWriter struct {
+	header []string
+}
+
+func (d *dumbTableWriter) Append(row []string) {
+	if d.header != nil {
+		fmt.Println(strings.Join(d.header, "\t"))
+		d.header = nil
+	}
+
+	fmt.Println(strings.Join(row, "\t"))
+}
+
+func (*dumbTableWriter) Render() {}
 
 func filterCommonLabels(metric model.Metric, commonLabels model.LabelSet) {
 	for labelName, _ := range commonLabels {

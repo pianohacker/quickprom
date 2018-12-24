@@ -12,7 +12,9 @@ using the Prometheus API.
 ## TODO
 
 - [x] Range vector support
+- [x] Table output
+- [ ] Custom sorting
 - [ ] Range query support
-- [ ] Scalar support
 - [ ] Timestamp collapsing
 - [ ] Sparklines
+- [ ] Scalar support
