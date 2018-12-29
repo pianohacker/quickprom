@@ -54,29 +54,12 @@ func ParseOptsAndEnv(exitOnError bool) (*QuickPromOptions, error) {
 		return nil, err
 	}
 
-	var helpHandler func(error, string)
-	if exitOnError {
-		helpHandler = docopt.PrintHelpAndExit
-	} else {
-		helpHandler = docopt.NoHelpHandler
-	}
-
-	parser := &docopt.Parser{
-		HelpHandler: helpHandler,
-	}
-
-	parsedOpts, err := parser.ParseArgs(USAGE, os.Args[1:], "")
+	cmdLineOpts, err := parseCmdLineOpts(exitOnError)
 	if err != nil {
 		return nil, err
 	}
 
-	var cmdLineOpts QuickPromOptions
-	err = parsedOpts.Bind(&cmdLineOpts)
-	if err != nil {
-		return nil, err
-	}
-
-	mergeOpts(&opts, &cmdLineOpts)
+	mergeOpts(&opts, cmdLineOpts)
 
 	if opts.Target == "" {
 		return nil, errors.New("must specify target URL with --target or QUICKPROM_TARGET")
@@ -119,6 +102,32 @@ func ParseOptsAndEnv(exitOnError bool) (*QuickPromOptions, error) {
 	}
 
 	return &opts, nil
+}
+
+func parseCmdLineOpts(exitOnError bool) (*QuickPromOptions, error) {
+	var helpHandler func(error, string)
+	if exitOnError {
+		helpHandler = docopt.PrintHelpAndExit
+	} else {
+		helpHandler = docopt.NoHelpHandler
+	}
+
+	parser := &docopt.Parser{
+		HelpHandler: helpHandler,
+	}
+
+	parsedOpts, err := parser.ParseArgs(USAGE, os.Args[1:], "")
+	if err != nil {
+		return nil, err
+	}
+
+	var cmdLineOpts QuickPromOptions
+	err = parsedOpts.Bind(&cmdLineOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cmdLineOpts, nil
 }
 
 func mergeOpts(destOpts, srcOpts *QuickPromOptions) {
