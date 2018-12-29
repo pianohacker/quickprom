@@ -11,8 +11,10 @@ import (
 	"github.com/prometheus/common/model"
 )
 
-const timestampFormat = "2006-01-02 15:04:05.000 MST"
-const shortTimestampFormat = "2006-01-02 15:04:05.000"
+const timeFormatWithTZ = "2006-01-02 15:04:05.000 MST"
+const timeFormatWithDate = "2006-01-02 15:04:05.000"
+const timeFormat = "15:04:05.000"
+const timeFormatDateOnly = "2006-01-02"
 
 func OutputValue(value model.Value) {
 	switch value.Type() {
@@ -35,7 +37,7 @@ func outputVector(vector model.Vector) {
 		return
 	}
 
-	fmt.Printf("@ %s:\n", vector[0].Timestamp.Time().Format(timestampFormat))
+	fmt.Printf("@ %s:\n", vector[0].Timestamp.Time().Format(timeFormatWithTZ))
 	var commonLabels model.LabelSet
 	info := VectorInfo(vector)
 
@@ -43,7 +45,7 @@ func outputVector(vector model.Vector) {
 		commonLabels = VectorInfo(vector).GetCommonLabels()
 
 		if len(commonLabels) > 0 {
-			fmt.Printf("Common labels: %s\n", commonLabels)
+			fmt.Printf("  Common labels: %s\n", commonLabels)
 		}
 	}
 
@@ -83,17 +85,29 @@ func outputVector(vector model.Vector) {
 func outputMatrix(matrix model.Matrix) {
 	fmt.Print("Range vector ")
 	if len(matrix) == 0 {
-		fmt.Println("(empty result)")
+		fmt.Println("(empty result):")
 		return
 	}
+	fmt.Println("")
 
+	matrixInfo := MatrixInfo(matrix)
 	var commonLabels model.LabelSet
 	if len(matrix) > 1 {
-		commonLabels = MatrixInfo(matrix).GetCommonLabels()
+		commonLabels = matrixInfo.GetCommonLabels()
 
 		if len(commonLabels) > 0 {
-			fmt.Printf("Common labels: %s\n", commonLabels)
+			fmt.Printf("  Common labels: %s\n", commonLabels)
 		}
+	}
+
+	var timestampFormat = timeFormatWithDate
+	minTime, maxTime := matrixInfo.GetTimeRange()
+	minDate := minTime.Format(timeFormatDateOnly)
+	maxDate := maxTime.Format(timeFormatDateOnly)
+
+	if minDate == maxDate {
+		fmt.Printf("  Date: %s\n", minDate)
+		timestampFormat = timeFormat
 	}
 
 	fmt.Println("")
@@ -103,7 +117,7 @@ func outputMatrix(matrix model.Matrix) {
 		fmt.Printf("%v:\n", series.Metric)
 
 		for _, sample := range series.Values {
-			fmt.Printf("    %s: %f\n", sample.Timestamp.Time().Format(shortTimestampFormat), sample.Value)
+			fmt.Printf("    %s: %f\n", sample.Timestamp.Time().Format(timestampFormat), sample.Value)
 		}
 	}
 }

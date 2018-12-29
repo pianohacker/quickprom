@@ -6,15 +6,16 @@ using the Prometheus API.
 
 ## Features
 
-- Collapses labels that are shared between series
+- Shows labels that are shared between samples/series, and hides date if it's the same between all series
 - Can automatically use authorization from your CloudFoundry CLI session
+- If outputting to a terminal:
+	- Labels are organized into a table
 
 ## TODO
 
-- [x] Range vector support
 - [x] Table output
+- [ ] JSON output
 - [ ] Custom sorting
 - [ ] Range query support
-- [ ] Timestamp collapsing
 - [ ] Sparklines
 - [ ] Scalar support
