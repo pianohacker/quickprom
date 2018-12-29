@@ -13,7 +13,7 @@ import (
 	"github.com/prometheus/common/model"
 )
 
-const USAGE = `QuickProm.
+const USAGE = `quickprom - run queries against Prometheus-compatible databases
 
 Usage:
   quickprom [-t TARGET] [--cf-auth] QUERY [--time TIME]
@@ -22,7 +22,7 @@ Usage:
 Options:
   -t, --target TARGET  URL of Prometheus-compatible target (QUICKPROM_TARGET)
   --cf-auth            Automatically use current oAuth token from ` + "`cf`" + ` (QUICKPROM_CF_AUTH)
-  --time TIME          Evaluation time of instant query (defaults to now)
+  --time TIME          Evaluate instant query at ` + "`TIME`" + ` (defaults to now)
   --start START        Start time of range query
   --end END            End time of range query (inclusive, defaults to now)
   --step STEP          Step of range query
@@ -33,7 +33,7 @@ type QuickPromOptions struct {
 	CfAuth bool   `docopt:"--cf-auth" env:"QUICKPROM_CF_AUTH"`
 
 	TimeInput string `docopt:"--time"`
-	Time time.Time
+	Time      time.Time
 
 	RangeEnabled    bool   `docopt:"range"`
 	RangeStartInput string `docopt:"--start"`
