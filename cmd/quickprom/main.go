@@ -7,38 +7,19 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"reflect"
 	"strings"
 	"time"
-
-	envstruct "code.cloudfoundry.org/go-envstruct"
-	docopt "github.com/docopt/docopt-go"
 
 	"github.com/prometheus/client_golang/api"
 	"github.com/prometheus/client_golang/api/prometheus/v1"
 
-	"github.com/pianohacker/quickprom/output"
+	"github.com/pianohacker/quickprom/internal/cmdline"
+	"github.com/pianohacker/quickprom/internal/output"
 )
 
-const USAGE = `QuickProm.
-
-Usage:
-  quickprom [-t TARGET] [--cf-auth] QUERY
-
-Options:
-  -t, --target TARGET  URL of Prometheus-compatible target (QUICKPROM_TARGET)
-  --cf-auth            Automatically use current oAuth token from ` + "`cf`" + ` (QUICKPROM_CF_AUTH)
-`
-
-type QuickPromOptions struct {
-	string `docopt:"--target" env:"QUICKPROM_TARGET"`
-	CfAuth bool `docopt:"--cf-auth" env:"QUICKPROM_CF_AUTH"`
-
-	Query string `docopt:"QUERY"`
-}
-
 func main() {
-	opts := parseOptsAndEnv()
+	opts, err := cmdline.ParseOptsAndEnv(true)
+	failIfErr("Error: %s", err)
 
 	var roundTripper http.RoundTripper = http.DefaultTransport
 
@@ -56,44 +37,6 @@ func main() {
 	failIfErr("Failed to run query: %s", err)
 
 	output.OutputValue(value)
-}
-
-func parseOptsAndEnv() *QuickPromOptions {
-	var opts QuickPromOptions
-
-	err := envstruct.Load(&opts)
-	failIfErr("%s", err)
-
-	parsedOpts, err := docopt.ParseDoc(USAGE)
-	failIfErr("%s", err)
-
-	var cmdLineOpts QuickPromOptions
-	err = parsedOpts.Bind(&cmdLineOpts)
-	failIfErr("%s", err)
-
-	mergeOpts(&opts, &cmdLineOpts)
-
-	if opts.Target == "" {
-		fail("Error: Must specify target URL with --target or QUICKPROM_TARGET")
-	}
-
-	return &opts
-}
-
-func mergeOpts(destOpts, srcOpts *QuickPromOptions) {
-	destOptsVal := reflect.ValueOf(destOpts).Elem()
-	srcOptsVal := reflect.ValueOf(srcOpts).Elem()
-
-	for i := 0; i < destOptsVal.NumField(); i++ {
-		destFieldVal := destOptsVal.Field(i)
-		srcFieldVal := srcOptsVal.Field(i)
-
-		zeroVal := reflect.Zero(destFieldVal.Type()).Interface()
-
-		if !reflect.DeepEqual(srcFieldVal.Interface(), zeroVal) {
-			destFieldVal.Set(srcFieldVal)
-		}
-	}
 }
 
 func fail(msg string, args ...interface{}) {

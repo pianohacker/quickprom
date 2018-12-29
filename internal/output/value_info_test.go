@@ -5,7 +5,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/prometheus/common/model"
 
-	"github.com/pianohacker/quickprom/output"
+	"github.com/pianohacker/quickprom/internal/output"
 )
 
 var _ = Describe("Value Info", func() {
