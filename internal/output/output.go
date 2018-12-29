@@ -11,10 +11,10 @@ import (
 	"github.com/prometheus/common/model"
 )
 
-const timeFormatWithTZ = "2006-01-02 15:04:05.000 MST"
-const timeFormatWithDate = "2006-01-02 15:04:05.000"
-const timeFormat = "15:04:05.000"
-const timeFormatDateOnly = "2006-01-02"
+const TimeFormatWithTZ = "2006-01-02 15:04:05.000 MST"
+const TimeFormatWithDate = "2006-01-02 15:04:05.000"
+const TimeFormat = "15:04:05.000"
+const TimeFormatDateOnly = "2006-01-02"
 
 func OutputValue(value model.Value) {
 	switch value.Type() {
@@ -37,7 +37,7 @@ func outputVector(vector model.Vector) {
 		return
 	}
 
-	fmt.Printf("@ %s:\n", vector[0].Timestamp.Time().Format(timeFormatWithTZ))
+	fmt.Printf("@ %s:\n", vector[0].Timestamp.Time().Format(TimeFormatWithTZ))
 	var commonLabels model.LabelSet
 	info := VectorInfo(vector)
 
@@ -100,14 +100,14 @@ func outputMatrix(matrix model.Matrix) {
 		}
 	}
 
-	var timestampFormat = timeFormatWithDate
+	var timestampFormat = TimeFormatWithDate
 	minTime, maxTime := matrixInfo.GetTimeRange()
-	minDate := minTime.Format(timeFormatDateOnly)
-	maxDate := maxTime.Format(timeFormatDateOnly)
+	minDate := minTime.Format(TimeFormatDateOnly)
+	maxDate := maxTime.Format(TimeFormatDateOnly)
 
 	if minDate == maxDate {
 		fmt.Printf("  Date: %s\n", minDate)
-		timestampFormat = timeFormat
+		timestampFormat = TimeFormat
 	}
 
 	fmt.Println("")

@@ -1,5 +1,7 @@
 code.cloudfoundry.org/go-envstruct v1.4.0 h1:bDwwwxIZdvYdB5udkTnmaOrRjQeE61XcvDHmAUmg2hk=
 code.cloudfoundry.org/go-envstruct v1.4.0/go.mod h1:/Mr9WxQueWKylLYSZaPbiQlmzzZNbButXn08qM03Vfk=
+github.com/bcampbell/fuzzytime v0.0.0-20170619084447-6a03581b01a2 h1:t4INFwssgfkxKyYcedB2DNvkR4HI8hkThtg+3290Ph4=
+github.com/bcampbell/fuzzytime v0.0.0-20170619084447-6a03581b01a2/go.mod h1:qTQjDNMns0LtE/Txk4cufBxC2Vt5Q97SyOIWV5PQtjo=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815 h1:bWDMxwH3px2JBh6AyO7hdCn/PkvCZXii8TGj7sbtEbQ=
 github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815/go.mod h1:WwZ+bS3ebgob9U8Nd0kOddGdZWjyMGR8Wziv+TBNwSE=

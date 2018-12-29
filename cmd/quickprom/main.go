@@ -12,6 +12,7 @@ import (
 
 	"github.com/prometheus/client_golang/api"
 	"github.com/prometheus/client_golang/api/prometheus/v1"
+	"github.com/prometheus/common/model"
 
 	"github.com/pianohacker/quickprom/internal/cmdline"
 	"github.com/pianohacker/quickprom/internal/output"
@@ -33,7 +34,17 @@ func main() {
 	promClient := getPromClient(opts.Target, roundTripper)
 
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	value, err := promClient.Query(ctx, opts.Query, time.Now())
+
+	var value model.Value
+	if opts.RangeEnabled {
+		value, err = promClient.QueryRange(ctx, opts.Query, v1.Range{
+			Start: opts.RangeStart,
+			End: opts.RangeEnd,
+			Step: opts.RangeStep,
+		})
+	} else {
+		value, err = promClient.Query(ctx, opts.Query, opts.Time)
+	}
 	failIfErr("Failed to run query: %s", err)
 
 	output.OutputValue(value)

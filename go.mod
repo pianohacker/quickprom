@@ -2,6 +2,7 @@ module github.com/pianohacker/quickprom
 
 require (
 	code.cloudfoundry.org/go-envstruct v1.4.0
+	github.com/bcampbell/fuzzytime v0.0.0-20170619084447-6a03581b01a2
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/mattn/go-isatty v0.0.4
 	github.com/mattn/go-runewidth v0.0.4 // indirect

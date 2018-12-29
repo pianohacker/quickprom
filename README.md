@@ -13,9 +13,8 @@ using the Prometheus API.
 
 ## TODO
 
-- [x] Table output
+- [ ] Improved errors
 - [ ] JSON output
 - [ ] Custom sorting
-- [ ] Range query support
 - [ ] Sparklines
 - [ ] Scalar support
