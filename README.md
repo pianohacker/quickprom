@@ -13,7 +13,9 @@ using the Prometheus API.
 
 ## TODO
 
+- [ ] Unit tests of output conversion
 - [ ] JSON output
+- [ ] Acceptance tests of binary
 - [ ] Custom sorting
 - [ ] Sparklines
 - [ ] Scalar support
