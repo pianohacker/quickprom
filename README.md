@@ -13,7 +13,6 @@ using the Prometheus API.
 
 ## TODO
 
-- [ ] Improved errors
 - [ ] JSON output
 - [ ] Custom sorting
 - [ ] Sparklines
