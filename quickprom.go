@@ -7,59 +7,93 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"reflect"
 	"strings"
 	"time"
 
-	"github.com/namsral/flag"
+	envstruct "code.cloudfoundry.org/go-envstruct"
+	docopt "github.com/docopt/docopt-go"
+
 	"github.com/prometheus/client_golang/api"
 	"github.com/prometheus/client_golang/api/prometheus/v1"
 
 	"github.com/pianohacker/quickprom/output"
 )
 
+const USAGE = `QuickProm.
+
+Usage:
+  quickprom [-t TARGET] [--cf-auth] QUERY
+
+Options:
+  -t, --target TARGET  URL of Prometheus-compatible target (QUICKPROM_TARGET)
+  --cf-auth            Automatically use current oAuth token from ` + "`cf`" + ` (QUICKPROM_CF_AUTH)
+`
+
+type QuickPromOptions struct {
+	string `docopt:"--target" env:"QUICKPROM_TARGET"`
+	CfAuth bool `docopt:"--cf-auth" env:"QUICKPROM_CF_AUTH"`
+
+	Query string `docopt:"QUERY"`
+}
+
 func main() {
-	fs := flag.NewFlagSetWithEnvPrefix("quickprom", "QUICKPROM", flag.ExitOnError)
-
-	var (
-		cfAuth = fs.Bool("cf-auth", false, "Automatically use current oAuth token from `cf` (QUICKPROM_CF_AUTH)")
-		target = fs.String("target", "", "URL of Prometheus-compatible target (QUICKPROM_TARGET)")
-	)
-
-	fs.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [--cf-auth] [--target TARGET_URL] <query>\n", os.Args[0])
-		fs.PrintDefaults()
-	}
-
-	err := fs.Parse(os.Args[1:])
-	failIfErr("%s", err)
-
-	if fs.Arg(0) == "" {
-		fs.Usage()
-		os.Exit(2)
-	}
-
-	if *target == "" {
-		fail("Error: Must specify target URL with --target or QUICKPROM_TARGET")
-	}
-
-	query := fs.Arg(0)
+	opts := parseOptsAndEnv()
 
 	var roundTripper http.RoundTripper = http.DefaultTransport
 
-	if *cfAuth {
+	if opts.CfAuth {
 		token := getCfOauthToken()
 		roundTripper = &oauthRoundTripper{
 			token: token,
 		}
 	}
 
-	promClient := getPromClient(*target, roundTripper)
+	promClient := getPromClient(opts.Target, roundTripper)
 
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	value, err := promClient.Query(ctx, query, time.Now())
+	value, err := promClient.Query(ctx, opts.Query, time.Now())
 	failIfErr("Failed to run query: %s", err)
 
 	output.OutputValue(value)
+}
+
+func parseOptsAndEnv() *QuickPromOptions {
+	var opts QuickPromOptions
+
+	err := envstruct.Load(&opts)
+	failIfErr("%s", err)
+
+	parsedOpts, err := docopt.ParseDoc(USAGE)
+	failIfErr("%s", err)
+
+	var cmdLineOpts QuickPromOptions
+	err = parsedOpts.Bind(&cmdLineOpts)
+	failIfErr("%s", err)
+
+	mergeOpts(&opts, &cmdLineOpts)
+
+	if opts.Target == "" {
+		fail("Error: Must specify target URL with --target or QUICKPROM_TARGET")
+	}
+
+	return &opts
+}
+
+func mergeOpts(destOpts, srcOpts *QuickPromOptions) {
+	destOptsVal := reflect.ValueOf(destOpts).Elem()
+	srcOptsVal := reflect.ValueOf(srcOpts).Elem()
+
+	for i := 0; i < destOptsVal.NumField(); i++ {
+		destFieldVal := destOptsVal.Field(i)
+		srcFieldVal := srcOptsVal.Field(i)
+
+		zeroVal := reflect.Zero(destFieldVal.Type()).Interface()
+
+		if !reflect.DeepEqual(srcFieldVal.Interface(), zeroVal) {
+			destFieldVal.Set(srcFieldVal)
+		}
+	}
 }
 
 func fail(msg string, args ...interface{}) {

@@ -47,6 +47,8 @@ func outputVector(vector model.Vector) {
 		}
 	}
 
+	fmt.Println("")
+
 	var uncommonLabelSet []string
 
 	for labelName, _ := range info.labelInfo {
@@ -93,6 +95,8 @@ func outputMatrix(matrix model.Matrix) {
 			fmt.Printf("Common labels: %s\n", commonLabels)
 		}
 	}
+
+	fmt.Println("")
 
 	for _, series := range matrix {
 		filterCommonLabels(series.Metric, commonLabels)
