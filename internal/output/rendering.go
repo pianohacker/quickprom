@@ -5,6 +5,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/mattn/go-isatty"
 	"github.com/olekukonko/tablewriter"
@@ -13,7 +14,7 @@ import (
 
 const TimeFormatWithTZ = "2006-01-02 15:04:05.000 MST"
 const TimeFormatWithDate = "2006-01-02 15:04:05.000"
-const TimeFormat = "15:04:05.000"
+const TimeFormat = "15:04"
 const TimeFormatDateOnly = "2006-01-02"
 
 type Renderable interface {
@@ -87,19 +88,64 @@ func (f *FormattedMatrix) RenderText() {
 
 	fmt.Println("")
 
-	for _, series := range f.Series {
-		for i, labelName := range f.VaryingLabels {
-			if i != 0 {
-				fmt.Print(", ")
-			}
-			fmt.Printf("%s %s", bold(labelName + ":"), series.LabelValues[i])
-		}
-		fmt.Println(":")
+	// for _, series := range f.Series {
+	// 	for i, labelName := range f.VaryingLabels {
+	// 		if i != 0 {
+	// 			fmt.Print(", ")
+	// 		}
+	// 		fmt.Printf("%s %s", bold(labelName + ":"), series.LabelValues[i])
+	// 	}
+	// 	fmt.Println(":")
 
+	// 	for _, sample := range series.Values {
+	// 		fmt.Printf("    %s: %f\n", sample.Time.Format(timestampFormat), sample.Value)
+	// 	}
+	// }
+
+	// Value column
+	valueTimes := make(map[time.Time]struct{})
+	for _, series := range f.Series {
 		for _, sample := range series.Values {
-			fmt.Printf("    %s: %f\n", sample.Time.Format(timestampFormat), sample.Value)
+			valueTimes[sample.Time] = struct{}{} 
 		}
 	}
+
+	var valueTimeList []time.Time
+	for t, _ := range valueTimes {
+		valueTimeList = append(valueTimeList, t)
+	}
+	sort.Slice(valueTimeList, func(i, j int) bool {
+		return valueTimeList[i].Before(valueTimeList[j])
+	})
+
+	var timeHeaders []string
+	for _, t := range valueTimeList {
+		timeHeaders = append(timeHeaders, t.Format(timestampFormat))
+	}
+
+	header := append(f.VaryingLabels, timeHeaders...)
+	tw := getTableWriter(header)
+
+	for _, series := range f.Series {
+		row := series.LabelValues
+
+		samplePos := 0
+		for _, t := range valueTimeList {
+			for samplePos < len(series.Values) && series.Values[samplePos].Time != t {
+				samplePos++
+			}
+
+			if samplePos < len(series.Values) {
+				row = append(row, fmt.Sprintf("%f", series.Values[samplePos].Value))
+			} else {
+				row = append(row, "")
+			}
+		}
+
+		tw.Append(row)
+	}
+
+	tw.Render()
 }
 
 func outputCommonLabels(commonLabels map[string]string) {
