@@ -12,64 +12,141 @@ import (
 )
 
 var _ = Describe("Options", func() {
-	Context("ParseOptsAndEnv", func() {
-		It("can parse options and environment variables", func() {
-			os.Args = []string{"quickprom", "query"}
-			os.Setenv("QUICKPROM_TARGET", "target")
+	DescribeTable("ParseOptsAndEnv",
+		func(
+			args []string,
+			env map[string]string,
+			testFunc func(opts *cmdline.QuickPromOptions, err error),
+		) {
+			os.Args = args
+			os.Clearenv()
+			for k, v := range env {
+				os.Setenv(k, v)
+			}
+
 			opts, err := cmdline.ParseOptsAndEnv(false)
 
-			Expect(err).ToNot(HaveOccurred())
+			testFunc(opts, err)
+		},
 
-			Expect(opts.Target).To(Equal("target"))
-			Expect(opts.Query).To(Equal("query"))
-		})
+		Entry("can parse options and environment variables",
+			[]string{"quickprom", "query"},
+			map[string]string{
+				"QUICKPROM_TARGET": "target",
+			},
 
-		It("can override environment variables with options", func() {
-			os.Args = []string{"quickprom", "-t", "cmdline_target", "query"}
-			os.Setenv("QUICKPROM_TARGET", "env_target")
-			opts, err := cmdline.ParseOptsAndEnv(false)
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
 
-			Expect(err).ToNot(HaveOccurred())
+				Expect(opts.Target).To(Equal("target"))
+				Expect(opts.Query).To(Equal("query"))
+			},
+		),
 
-			Expect(opts.Target).To(Equal("cmdline_target"))
-			Expect(opts.Query).To(Equal("query"))
-		})
+		Entry("can override environment variables with options",
+			[]string{"quickprom", "-t", "cmdline_target", "query"},
+			map[string]string{
+				"QUICKPROM_TARGET": "env_target",
+			},
 
-		It("can parse a timestamp when --time is given", func() {
-			os.Args = []string{
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.Target).To(Equal("cmdline_target"))
+				Expect(opts.Query).To(Equal("query"))
+			},
+		),
+
+		Entry("can parse --basic-auth from command line",
+			[]string{"quickprom", "-t", "target", "--basic-auth", "username:password","query"},
+			nil,
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.BasicAuth).To(Equal("username:password"))
+			},
+		),
+
+		Entry("can parse --basic-auth from environment variable",
+			[]string{"quickprom", "-t", "target", "query"},
+			map[string]string{
+				"QUICKPROM_BASIC_AUTH": "env_username:env_password",
+			},
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.BasicAuth).To(Equal("env_username:env_password"))
+			},
+		),
+
+		Entry("can parse --cf-auth from command line and environment variable",
+			[]string{"quickprom", "-t", "target", "--cf-auth", "query"},
+			nil,
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.CfAuth).To(BeTrue())
+			},
+		),
+
+		Entry("can parse --cf-auth from environment variable",
+			[]string{"quickprom", "-t", "target", "query"},
+			map[string]string{
+				"QUICKPROM_CF_AUTH": "true",
+			},
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				opts, err = cmdline.ParseOptsAndEnv(false)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.CfAuth).To(BeTrue())
+			},
+		),
+
+		Entry("can parse a timestamp when --time is given",
+			[]string{
 				"quickprom",
 				"--time",
 				"2018-01-02 00:12:45.000 UTC",
 				"query",
-			}
-			os.Setenv("QUICKPROM_TARGET", "env_target")
-			opts, err := cmdline.ParseOptsAndEnv(false)
+			},
+			map[string]string{
+				"QUICKPROM_TARGET": "env_target",
+			},
 
-			Expect(err).ToNot(HaveOccurred())
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
 
-			Expect(opts.Time).To(BeTemporally("~", time.Date(
-				2018, 1, 2,
-				0, 12, 45,
-				0,
-				time.UTC,
-			)))
-		})
+				Expect(opts.Time).To(BeTemporally("~", time.Date(
+					2018, 1, 2,
+					0, 12, 45,
+					0,
+					time.UTC,
+				)))
+			},
+		),
 
-		It("defaults to now when --time is not given", func() {
-			os.Args = []string{
+		Entry("defaults to now when --time is not given",
+			[]string{
 				"quickprom",
 				"query",
-			}
-			os.Setenv("QUICKPROM_TARGET", "env_target")
-			opts, err := cmdline.ParseOptsAndEnv(false)
+			},
+			map[string]string{
+				"QUICKPROM_TARGET": "env_target",
+			},
 
-			Expect(err).ToNot(HaveOccurred())
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
 
-			Expect(opts.Time).To(BeTemporally("~", time.Now()))
-		})
+				Expect(opts.Time).To(BeTemporally("~", time.Now()))
+			},
+		),
 
-		It("can parse timestamps when `range` is given", func() {
-			os.Args = []string{
+		Entry("can parse timestamps when `range` is given",
+			[]string{
 				"quickprom",
 				"range",
 				"--start",
@@ -79,32 +156,37 @@ var _ = Describe("Options", func() {
 				"--step",
 				"1d",
 				"query",
-			}
-			os.Setenv("QUICKPROM_TARGET", "env_target")
-			opts, err := cmdline.ParseOptsAndEnv(false)
+			},
+			map[string]string{
+				"QUICKPROM_TARGET": "env_target",
+			},
 
-			now := time.Now()
-			fourPM := time.Date(
-				now.Year(), now.Month(), now.Day(),
-				16, 5, 0,
-				0,
-				time.Local,
-			)
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
 
-			Expect(err).ToNot(HaveOccurred())
+				now := time.Now()
+				fourPM := time.Date(
+					now.Year(), now.Month(), now.Day(),
+					16, 5, 0,
+					0,
+					time.Local,
+				)
 
-			Expect(opts.RangeStart).To(BeTemporally("~", time.Date(
-				2018, 1, 2,
-				0, 12, 45,
-				0,
-				time.UTC,
-			)))
-			Expect(opts.RangeEnd).To(Equal(fourPM))
-			Expect(opts.RangeStep).To(Equal(24 * time.Hour))
-		})
+				Expect(err).ToNot(HaveOccurred())
 
-		It("defaults to a range end of now", func() {
-			os.Args = []string{
+				Expect(opts.RangeStart).To(BeTemporally("~", time.Date(
+					2018, 1, 2,
+					0, 12, 45,
+					0,
+					time.UTC,
+				)))
+				Expect(opts.RangeEnd).To(Equal(fourPM))
+				Expect(opts.RangeStep).To(Equal(24 * time.Hour))
+			},
+		),
+
+		Entry("defaults to a range end of now",
+			[]string{
 				"quickprom",
 				"range",
 				"--start",
@@ -112,39 +194,59 @@ var _ = Describe("Options", func() {
 				"--step",
 				"1d",
 				"query",
-			}
-			os.Setenv("QUICKPROM_TARGET", "env_target")
-			opts, err := cmdline.ParseOptsAndEnv(false)
+			},
+			map[string]string{
+				"QUICKPROM_TARGET": "env_target",
+			},
 
-			Expect(err).ToNot(HaveOccurred())
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
 
-			Expect(opts.RangeEnd).To(BeTemporally("~", time.Now()))
-		})
+				Expect(opts.RangeEnd).To(BeTemporally("~", time.Now()))
+			},
+		),
 
-		It("returns an error when target is unspecified", func() {
-			os.Args = []string{"quickprom", "query"}
-			os.Setenv("QUICKPROM_TARGET", "")
-			_, err := cmdline.ParseOptsAndEnv(false)
+		Entry("returns an error when target is unspecified",
+			[]string{"quickprom", "query"},
+			map[string]string{
+				"QUICKPROM_TARGET": "",
+			},
 
-			Expect(err).To(HaveOccurred())
-		})
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).To(HaveOccurred())
+			},
+		),
 
-		It("returns an error when range start is omitted", func() {
-			os.Args = []string{
+		Entry("returns an error when basic auth not in USER:PASS format",
+			[]string{"quickprom", "--basic-auth", "badstuff", "query"},
+			map[string]string{
+				"QUICKPROM_TARGET": "target",
+			},
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).To(HaveOccurred())
+			},
+		),
+
+		Entry("returns an error when range start is omitted",
+			[]string{
 				"quickprom",
 				"range",
 				"--step",
 				"1d",
 				"query",
-			}
-			os.Setenv("QUICKPROM_TARGET", "target")
-			_, err := cmdline.ParseOptsAndEnv(false)
+			},
+			map[string]string{
+				"QUICKPROM_TARGET": "target",
+			},
 
-			Expect(err).To(HaveOccurred())
-		})
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).To(HaveOccurred())
+			},
+		),
 
-		It("returns an error when range end is before start", func() {
-			os.Args = []string{
+		Entry("returns an error when range end is before start",
+			[]string{
 				"quickprom",
 				"range",
 				"--start",
@@ -154,29 +256,34 @@ var _ = Describe("Options", func() {
 				"--step",
 				"1d",
 				"query",
-			}
-			os.Setenv("QUICKPROM_TARGET", "target")
-			_, err := cmdline.ParseOptsAndEnv(false)
+			},
+			map[string]string{
+				"QUICKPROM_TARGET": "target",
+			},
 
-			Expect(err).To(HaveOccurred())
-		})
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).To(HaveOccurred())
+			},
+		),
 
-		It("returns an error when range step is omitted", func() {
-			os.Args = []string{
+		Entry("returns an error when range step is omitted",
+			[]string{
 				"quickprom",
 				"range",
 				"--start",
 				"2018-01-02 00:12:45.000 UTC",
 				"query",
-			}
-			os.Setenv("QUICKPROM_TARGET", "target")
-			_, err := cmdline.ParseOptsAndEnv(false)
+			},
+			map[string]string{
+				"QUICKPROM_TARGET": "target",
+			},
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).To(HaveOccurred())
+			},
+		),
 
-			Expect(err).To(HaveOccurred())
-		})
-
-		It("returns an error when range step is invalid", func() {
-			os.Args = []string{
+		Entry("returns an error when range step is invalid",
+			[]string{
 				"quickprom",
 				"range",
 				"--start",
@@ -184,13 +291,15 @@ var _ = Describe("Options", func() {
 				"--step",
 				"potato",
 				"query",
-			}
-			os.Setenv("QUICKPROM_TARGET", "target")
-			_, err := cmdline.ParseOptsAndEnv(false)
-
-			Expect(err).To(HaveOccurred())
-		})
-	})
+			},
+			map[string]string{
+				"QUICKPROM_TARGET": "target",
+			},
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).To(HaveOccurred())
+			},
+		),
+	)
 
 	Context("ParseTime", func() {
 		DescribeTable("handles partial dates",

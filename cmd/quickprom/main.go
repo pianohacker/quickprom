@@ -3,17 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
-	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/api"
 	"github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
 
+	"github.com/pianohacker/quickprom/internal/auth"
 	"github.com/pianohacker/quickprom/internal/cmdline"
 	"github.com/pianohacker/quickprom/internal/output"
 )
@@ -22,13 +20,13 @@ func main() {
 	opts, err := cmdline.ParseOptsAndEnv(true)
 	failIfErr("Error: %s", err)
 
-	var roundTripper http.RoundTripper = http.DefaultTransport
+	var roundTripper http.RoundTripper = api.DefaultRoundTripper
 
 	if opts.CfAuth {
-		token := getCfOauthToken()
-		roundTripper = &oauthRoundTripper{
-			token: token,
-		}
+		roundTripper, err = auth.GetCfAuthRoundTripper(roundTripper)
+		failIfErr("Error: %s", err)
+	} else if opts.BasicAuth != "" {
+		roundTripper = auth.GetBasicAuthRoundTripper(opts.BasicAuth, roundTripper)
 	}
 
 	promClient := getPromClient(opts.Target, roundTripper)
@@ -62,31 +60,6 @@ func failIfErr(msg string, args ...interface{}) {
 	}
 
 	fail(msg, args...)
-}
-
-func getCfOauthToken() string {
-	getTokenCommand := exec.Command("cf", "oauth-token")
-	getTokenOutput, err := getTokenCommand.StdoutPipe()
-	err = getTokenCommand.Start()
-	failIfErr("Failed to launch `cf oauth-token`: %s", err)
-
-	tokenBytes, err := ioutil.ReadAll(getTokenOutput)
-	failIfErr("Failed to read from `cf oauth-token`: %s", err)
-
-	err = getTokenCommand.Wait()
-	failIfErr("Failed to run `cf oauth-token`: %s", err)
-
-	return strings.TrimRight(string(tokenBytes), "\r\n")
-}
-
-type oauthRoundTripper struct {
-	token string
-}
-
-func (o *oauthRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Set("Authorization", o.token)
-
-	return http.DefaultTransport.RoundTrip(req)
 }
 
 func getPromClient(targetAddress string, roundTripper http.RoundTripper) v1.API {

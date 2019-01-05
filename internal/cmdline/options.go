@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"time"
 
 	envstruct "code.cloudfoundry.org/go-envstruct"
@@ -16,20 +17,22 @@ import (
 const USAGE = `quickprom - run queries against Prometheus-compatible databases
 
 Usage:
-  quickprom [-t TARGET] [--cf-auth] QUERY [--time TIME]
-  quickprom [-t TARGET] [--cf-auth] range QUERY --start START [--end END] --step STEP
+  quickprom [options] QUERY [--time TIME]
+  quickprom [options] range QUERY --start START [--end END] --step STEP
 
 Options:
-  -t, --target TARGET  URL of Prometheus-compatible target (QUICKPROM_TARGET)
-  --cf-auth            Automatically use current oAuth token from ` + "`cf`" + ` (QUICKPROM_CF_AUTH)
-  --time TIME          Evaluate instant query at ` + "`TIME`" + ` (defaults to now)
-  --start START        Start time of range query
-  --end END            End time of range query (inclusive, defaults to now)
-  --step STEP          Step of range query
+  -t, --target TARGET     URL of Prometheus-compatible target (QUICKPROM_TARGET)
+  --basic-auth USER:PASS  Use basic authentication (QUICKPROM_BASIC_AUTH)
+  --cf-auth               Automatically use current oAuth token from ` + "`cf`" + ` (QUICKPROM_CF_AUTH)
+  --time TIME             Evaluate instant query at ` + "`TIME`" + ` (defaults to now)
+  --start START           Start time of range query
+  --end END               End time of range query (inclusive, defaults to now)
+  --step STEP             Step of range query
 `
 
 type QuickPromOptions struct {
 	Target string `docopt:"--target" env:"QUICKPROM_TARGET"`
+	BasicAuth string `docopt:"--basic-auth" env:"QUICKPROM_BASIC_AUTH"`
 	CfAuth bool   `docopt:"--cf-auth" env:"QUICKPROM_CF_AUTH"`
 
 	TimeInput string `docopt:"--time"`
@@ -63,6 +66,14 @@ func ParseOptsAndEnv(exitOnError bool) (*QuickPromOptions, error) {
 
 	if opts.Target == "" {
 		return nil, errors.New("must specify target URL with --target or QUICKPROM_TARGET")
+	}
+
+	if opts.BasicAuth != "" {
+		basicAuthParts := strings.SplitN(opts.BasicAuth, ":", 2)
+
+		if len(basicAuthParts) != 2 {
+			return nil, errors.New("must specify basic auth as USER:PASS")
+		}
 	}
 
 	if opts.RangeEnabled {
@@ -106,10 +117,13 @@ func ParseOptsAndEnv(exitOnError bool) (*QuickPromOptions, error) {
 
 func parseCmdLineOpts(exitOnError bool) (*QuickPromOptions, error) {
 	var helpHandler func(error, string)
+	var cmdlineUsageErr error
 	if exitOnError {
 		helpHandler = docopt.PrintHelpAndExit
 	} else {
-		helpHandler = docopt.NoHelpHandler
+		helpHandler = func(err error, usage string) {
+			cmdlineUsageErr = errors.New(usage)
+		}
 	}
 
 	parser := &docopt.Parser{
@@ -117,6 +131,9 @@ func parseCmdLineOpts(exitOnError bool) (*QuickPromOptions, error) {
 	}
 
 	parsedOpts, err := parser.ParseArgs(USAGE, os.Args[1:], "")
+	if cmdlineUsageErr != nil {
+		return nil, cmdlineUsageErr
+	}
 	if err != nil {
 		return nil, err
 	}

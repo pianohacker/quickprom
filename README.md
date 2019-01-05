@@ -13,7 +13,6 @@ using the Prometheus API.
 
 ## TODO
 
-- [ ] Basic auth support
 - [ ] JSON output
 - [ ] Acceptance tests of binary
 - [ ] Custom sorting
