@@ -154,6 +154,22 @@ var _ = Describe("Options", func() {
 			},
 		),
 
+		Entry("supports a short option for --time",
+			[]string{
+				"quickprom",
+				"-i",
+				"2018-01-02 00:12:45.000",
+				"query",
+			},
+			map[string]string{
+				"QUICKPROM_TARGET": "env_target",
+			},
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+			},
+		),
+
 		Entry("defaults to now when --time is not given",
 			[]string{
 				"quickprom",
@@ -207,6 +223,27 @@ var _ = Describe("Options", func() {
 				)))
 				Expect(opts.RangeEnd).To(Equal(fourPM))
 				Expect(opts.RangeStep).To(Equal(24 * time.Hour))
+			},
+		),
+
+		Entry("supports short options to `range`",
+			[]string{
+				"quickprom",
+				"range",
+				"-s",
+				"2018-01-02 00:12:45.000 UTC",
+				"-e",
+				"4:05 PM",
+				"-p",
+				"1d",
+				"query",
+			},
+			map[string]string{
+				"QUICKPROM_TARGET": "env_target",
+			},
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
 			},
 		),
 
