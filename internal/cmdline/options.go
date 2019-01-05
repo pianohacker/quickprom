@@ -22,6 +22,7 @@ Usage:
 
 Options:
   -t, --target TARGET     URL of Prometheus-compatible target (QUICKPROM_TARGET)
+  -k, --skip-tls-verify   Don't verify remote certificate (QUICKPROM_SKIP_TLS_VERIFY)
   --basic-auth USER:PASS  Use basic authentication (QUICKPROM_BASIC_AUTH)
   --cf-auth               Automatically use current oAuth token from ` + "`cf`" + ` (QUICKPROM_CF_AUTH)
   --time TIME             Evaluate instant query at ` + "`TIME`" + ` (defaults to now)
@@ -32,6 +33,7 @@ Options:
 
 type QuickPromOptions struct {
 	Target string `docopt:"--target" env:"QUICKPROM_TARGET"`
+	SkipTlsVerify bool `docopt:"--skip-tls-verify" env:"QUICKPROM_SKIP_TLS_VERIFY"`
 	BasicAuth string `docopt:"--basic-auth" env:"QUICKPROM_BASIC_AUTH"`
 	CfAuth bool   `docopt:"--cf-auth" env:"QUICKPROM_CF_AUTH"`
 

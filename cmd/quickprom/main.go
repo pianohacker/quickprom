@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
@@ -20,16 +21,7 @@ func main() {
 	opts, err := cmdline.ParseOptsAndEnv(true)
 	failIfErr("Error: %s", err)
 
-	var roundTripper http.RoundTripper = api.DefaultRoundTripper
-
-	if opts.CfAuth {
-		roundTripper, err = auth.GetCfAuthRoundTripper(roundTripper)
-		failIfErr("Error: %s", err)
-	} else if opts.BasicAuth != "" {
-		roundTripper = auth.GetBasicAuthRoundTripper(opts.BasicAuth, roundTripper)
-	}
-
-	promClient := getPromClient(opts.Target, roundTripper)
+	promClient := getPromClient(opts)
 
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 
@@ -62,12 +54,32 @@ func failIfErr(msg string, args ...interface{}) {
 	fail(msg, args...)
 }
 
-func getPromClient(targetAddress string, roundTripper http.RoundTripper) v1.API {
+func getPromClient(opts *cmdline.QuickPromOptions) v1.API {
 	apiClient, err := api.NewClient(api.Config{
-		Address:      targetAddress,
-		RoundTripper: roundTripper,
+		Address:      opts.Target,
+		RoundTripper: getRoundTripper(opts),
 	})
 	failIfErr("Failed to initialize Prometheus API: %s", err)
 
 	return v1.NewAPI(apiClient)
+}
+
+func getRoundTripper(opts *cmdline.QuickPromOptions) http.RoundTripper {
+	var roundTripper http.RoundTripper = api.DefaultRoundTripper
+
+	if opts.SkipTlsVerify {
+		roundTripper.(*http.Transport).TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+	}
+
+	if opts.CfAuth {
+		var err error
+		roundTripper, err = auth.GetCfAuthRoundTripper(roundTripper)
+		failIfErr("Error: %s", err)
+	} else if opts.BasicAuth != "" {
+		roundTripper = auth.GetBasicAuthRoundTripper(opts.BasicAuth, roundTripper)
+	}
+
+	return roundTripper
 }

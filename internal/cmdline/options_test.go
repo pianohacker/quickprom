@@ -57,6 +57,31 @@ var _ = Describe("Options", func() {
 			},
 		),
 
+		Entry("can parse --skip-tls-verify from command line",
+			[]string{"quickprom", "--skip-tls-verify", "-t", "target", "query"},
+			nil,
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.SkipTlsVerify).To(BeTrue())
+			},
+		),
+
+		Entry("can parse --skip-tls-verify from environment variable",
+			[]string{"quickprom", "-t", "target", "query"},
+			map[string]string{
+				"QUICKPROM_SKIP_TLS_VERIFY": "true",
+			},
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				opts, err = cmdline.ParseOptsAndEnv(false)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.SkipTlsVerify).To(BeTrue())
+			},
+		),
+
 		Entry("can parse --basic-auth from command line",
 			[]string{"quickprom", "-t", "target", "--basic-auth", "username:password","query"},
 			nil,
@@ -81,7 +106,7 @@ var _ = Describe("Options", func() {
 			},
 		),
 
-		Entry("can parse --cf-auth from command line and environment variable",
+		Entry("can parse --cf-auth from command line",
 			[]string{"quickprom", "-t", "target", "--cf-auth", "query"},
 			nil,
 
