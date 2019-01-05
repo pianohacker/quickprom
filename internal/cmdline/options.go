@@ -54,10 +54,10 @@ Timestamp format:
 `
 
 type QuickPromOptions struct {
-	Target string `docopt:"--target" env:"QUICKPROM_TARGET"`
-	SkipTlsVerify bool `docopt:"--skip-tls-verify" env:"QUICKPROM_SKIP_TLS_VERIFY"`
-	BasicAuth string `docopt:"--basic-auth" env:"QUICKPROM_BASIC_AUTH"`
-	CfAuth bool   `docopt:"--cf-auth" env:"QUICKPROM_CF_AUTH"`
+	Target        string `docopt:"--target" env:"QUICKPROM_TARGET"`
+	SkipTlsVerify bool   `docopt:"--skip-tls-verify" env:"QUICKPROM_SKIP_TLS_VERIFY"`
+	BasicAuth     string `docopt:"--basic-auth" env:"QUICKPROM_BASIC_AUTH"`
+	CfAuth        bool   `docopt:"--cf-auth" env:"QUICKPROM_CF_AUTH"`
 
 	TimeInput string `docopt:"--time"`
 	Time      time.Time

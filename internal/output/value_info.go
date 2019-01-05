@@ -39,7 +39,7 @@ func VectorInfo(vector model.Vector) *ValueInfo {
 
 func MatrixInfo(matrix model.Matrix) *ValueInfo {
 	v := &ValueInfo{
-		labelInfo: make(labelInfoMap),
+		labelInfo:    make(labelInfoMap),
 		minTimestamp: model.Latest,
 		maxTimestamp: model.Earliest,
 	}

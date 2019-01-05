@@ -83,7 +83,7 @@ var _ = Describe("Options", func() {
 		),
 
 		Entry("can parse --basic-auth from command line",
-			[]string{"quickprom", "-t", "target", "--basic-auth", "username:password","query"},
+			[]string{"quickprom", "-t", "target", "--basic-auth", "username:password", "query"},
 			nil,
 
 			func(opts *cmdline.QuickPromOptions, err error) {

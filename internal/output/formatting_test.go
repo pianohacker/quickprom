@@ -2,6 +2,7 @@ package output_test
 
 import (
 	"time"
+
 	"github.com/prometheus/common/model"
 
 	"github.com/pianohacker/quickprom/internal/output"
@@ -35,7 +36,7 @@ var _ = Describe("Formatting", func() {
 			Expect(formatted.VaryingLabels).To(ConsistOf("label"))
 			Expect(formatted.Samples).To(ContainElement(output.FormattedSample{
 				LabelValues: []string{"value"},
-				Value: 123,
+				Value:       123,
 			}))
 		})
 
@@ -46,7 +47,7 @@ var _ = Describe("Formatting", func() {
 					Metric: model.Metric{
 						"varying-label-a": "varying-value-1",
 						"varying-label-b": "varying-value-2",
-						"shared-label": "shared-value",
+						"shared-label":    "shared-value",
 					},
 					Value: 123,
 				},
@@ -55,7 +56,7 @@ var _ = Describe("Formatting", func() {
 					Metric: model.Metric{
 						"varying-label-c": "varying-value-4",
 						"varying-label-a": "varying-value-3",
-						"shared-label": "shared-value",
+						"shared-label":    "shared-value",
 					},
 					Value: 321,
 				},
@@ -108,11 +109,11 @@ var _ = Describe("Formatting", func() {
 					Values: []model.SamplePair{
 						{
 							Timestamp: 1,
-							Value: 11,
+							Value:     11,
 						},
 						{
 							Timestamp: 2,
-							Value: 12,
+							Value:     12,
 						},
 					},
 				},
@@ -128,11 +129,11 @@ var _ = Describe("Formatting", func() {
 					LabelValues: []string{"value"},
 					Values: []output.FormattedSamplePair{
 						{
-							Time: time.Unix(0, 1e6),
+							Time:  time.Unix(0, 1e6),
 							Value: 11,
 						},
 						{
-							Time: time.Unix(0, 2e6),
+							Time:  time.Unix(0, 2e6),
 							Value: 12,
 						},
 					},
@@ -146,16 +147,16 @@ var _ = Describe("Formatting", func() {
 					Metric: model.Metric{
 						"varying-label-a": "varying-value-1",
 						"varying-label-b": "varying-value-2",
-						"shared-label": "shared-value",
+						"shared-label":    "shared-value",
 					},
 					Values: []model.SamplePair{
 						{
 							Timestamp: 1,
-							Value: 11,
+							Value:     11,
 						},
 						{
 							Timestamp: 3,
-							Value: 13,
+							Value:     13,
 						},
 					},
 				},
@@ -163,16 +164,16 @@ var _ = Describe("Formatting", func() {
 					Metric: model.Metric{
 						"varying-label-c": "varying-value-4",
 						"varying-label-a": "varying-value-3",
-						"shared-label": "shared-value",
+						"shared-label":    "shared-value",
 					},
 					Values: []model.SamplePair{
 						{
 							Timestamp: 2,
-							Value: 12,
+							Value:     12,
 						},
 						{
 							Timestamp: 4,
-							Value: 14,
+							Value:     14,
 						},
 					},
 				},
@@ -198,11 +199,11 @@ var _ = Describe("Formatting", func() {
 					},
 					Values: []output.FormattedSamplePair{
 						{
-							Time: time.Unix(0, 1e6),
+							Time:  time.Unix(0, 1e6),
 							Value: 11,
 						},
 						{
-							Time: time.Unix(0, 3e6),
+							Time:  time.Unix(0, 3e6),
 							Value: 13,
 						},
 					},
@@ -215,11 +216,11 @@ var _ = Describe("Formatting", func() {
 					},
 					Values: []output.FormattedSamplePair{
 						{
-							Time: time.Unix(0, 2e6),
+							Time:  time.Unix(0, 2e6),
 							Value: 12,
 						},
 						{
-							Time: time.Unix(0, 4e6),
+							Time:  time.Unix(0, 4e6),
 							Value: 14,
 						},
 					},

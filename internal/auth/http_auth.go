@@ -28,21 +28,20 @@ func GetCfAuthRoundTripper(innerRoundTripper http.RoundTripper) (http.RoundTripp
 	}
 
 	return &authRoundTripper{
-		authorization: strings.TrimRight(string(tokenBytes), "\r\n"),
+		authorization:     strings.TrimRight(string(tokenBytes), "\r\n"),
 		innerRoundTripper: innerRoundTripper,
 	}, nil
 }
 
-
 func GetBasicAuthRoundTripper(basicAuth string, innerRoundTripper http.RoundTripper) http.RoundTripper {
 	return &authRoundTripper{
-		authorization: "Basic " + base64.StdEncoding.EncodeToString([]byte(basicAuth)),
+		authorization:     "Basic " + base64.StdEncoding.EncodeToString([]byte(basicAuth)),
 		innerRoundTripper: innerRoundTripper,
 	}
 }
 
 type authRoundTripper struct {
-	authorization string
+	authorization     string
 	innerRoundTripper http.RoundTripper
 }
 

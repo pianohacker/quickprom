@@ -8,34 +8,34 @@ import (
 )
 
 type FormattedVector struct {
-	Empty bool
-	Time time.Time
-	CommonLabels map[string]string
+	Empty         bool
+	Time          time.Time
+	CommonLabels  map[string]string
 	VaryingLabels []string
-	Samples []FormattedSample
+	Samples       []FormattedSample
 }
 
 type FormattedSample struct {
 	LabelValues []string
-	Value float64
+	Value       float64
 }
 
 type FormattedMatrix struct {
-	Empty bool
-	MinTime time.Time
-	MaxTime time.Time
-	CommonLabels map[string]string
+	Empty         bool
+	MinTime       time.Time
+	MaxTime       time.Time
+	CommonLabels  map[string]string
 	VaryingLabels []string
-	Series []FormattedSeries
+	Series        []FormattedSeries
 }
 
 type FormattedSeries struct {
 	LabelValues []string
-	Values []FormattedSamplePair
+	Values      []FormattedSamplePair
 }
 
 type FormattedSamplePair struct {
-	Time time.Time
+	Time  time.Time
 	Value float64
 }
 
@@ -58,7 +58,7 @@ func FormatVector(v model.Vector) *FormattedVector {
 
 		result.Samples = append(result.Samples, FormattedSample{
 			LabelValues: labelValues,
-			Value: float64(s.Value),
+			Value:       float64(s.Value),
 		})
 	}
 
@@ -82,14 +82,14 @@ func FormatMatrix(m model.Matrix) *FormattedMatrix {
 
 		for _, p := range s.Values {
 			values = append(values, FormattedSamplePair{
-				Time: p.Timestamp.Time(),
+				Time:  p.Timestamp.Time(),
 				Value: float64(p.Value),
 			})
 		}
 
 		result.Series = append(result.Series, FormattedSeries{
 			LabelValues: getLabelValues(result.VaryingLabels, s.Metric),
-			Values: values,
+			Values:      values,
 		})
 	}
 
@@ -121,4 +121,3 @@ func getLabelValues(labelNames []string, metric model.Metric) (labelValues []str
 
 	return
 }
-

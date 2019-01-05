@@ -29,8 +29,8 @@ func main() {
 	if opts.RangeEnabled {
 		value, err = promClient.QueryRange(ctx, opts.Query, v1.Range{
 			Start: opts.RangeStart,
-			End: opts.RangeEnd,
-			Step: opts.RangeStep,
+			End:   opts.RangeEnd,
+			Step:  opts.RangeStep,
 		})
 	} else {
 		value, err = promClient.Query(ctx, opts.Query, opts.Time)

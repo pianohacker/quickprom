@@ -2,6 +2,7 @@ package output_test
 
 import (
 	"time"
+
 	"github.com/prometheus/common/model"
 
 	. "github.com/onsi/ginkgo"

@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mattn/go-isatty"
 	"github.com/olekukonko/tablewriter"
 	"github.com/prometheus/common/model"
 )
@@ -92,7 +91,7 @@ func (f *FormattedMatrix) RenderText() {
 			if i != 0 {
 				fmt.Print(", ")
 			}
-			fmt.Printf("%s %s", bold(labelName + ":"), series.LabelValues[i])
+			fmt.Printf("%s %s", bold(labelName+":"), series.LabelValues[i])
 		}
 		fmt.Println(":")
 
@@ -114,7 +113,7 @@ func outputCommonLabels(commonLabels map[string]string) {
 		if i != 0 {
 			fmt.Print(", ")
 		}
-		fmt.Printf("%s %s", bold(labelName + ":"), commonLabels[labelName])
+		fmt.Printf("%s %s", bold(labelName+":"), commonLabels[labelName])
 	}
 	fmt.Println("")
 }
@@ -149,9 +148,9 @@ func getTableWriter(header []string) tableOutput {
 
 func bold(s string) string {
 	if outputIsATty {
-		return "\x1b[1m" + s + "\x1b[0m";
+		return "\x1b[1m" + s + "\x1b[0m"
 	}
-	
+
 	return s
 }
 
