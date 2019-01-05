@@ -11,6 +11,13 @@ using the Prometheus API.
 	- Only shows date once if it's the same between all series
 - Supports basic authentication, or automatically using authorization from your CloudFoundry CLI session
 
+## Installation
+Go 1.11 is required.
+
+```console
+$ GO111MODULE=on go get github.com/pianohacker/quickprom/cmd/quickprom
+```
+
 ## Usage
 ```
   quickprom [options] QUERY [--time TIME]
@@ -113,6 +120,7 @@ Instant vector:
 
 ## TODO
 
+- [ ] Range vectors as tables
 - [ ] JSON output
 - [ ] Acceptance tests of binary
 - [ ] Custom sorting
