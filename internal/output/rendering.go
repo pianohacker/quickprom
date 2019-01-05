@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	isatty "github.com/mattn/go-isatty"
 	"github.com/olekukonko/tablewriter"
 	"github.com/prometheus/common/model"
 )
