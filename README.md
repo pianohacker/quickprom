@@ -6,10 +6,10 @@ using the Prometheus API.
 
 ## Features
 
-- Shows labels that are shared between samples/series, and hides date if it's the same between all series
-- Can automatically use authorization from your CloudFoundry CLI session
-- If outputting to a terminal:
-	- Labels are organized into a table
+- Automatically summarizes data:
+	- Collapses labels that are shared between samples/series
+	- Only shows date once if it's the same between all series
+- Supports basic authentication, or automatically using authorization from your CloudFoundry CLI session
 
 ## TODO
 
