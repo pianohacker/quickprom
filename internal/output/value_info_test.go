@@ -25,7 +25,7 @@ var _ = Describe("Value Info", func() {
 						"shared-b": "b",
 					},
 				},
-			}).GetCommonLabels()).To(Equal(model.LabelSet{
+			}).GetCommonLabels()).To(Equal(map[string]string{
 				"shared-a": "a",
 				"shared-b": "b",
 			}))
@@ -45,7 +45,7 @@ var _ = Describe("Value Info", func() {
 						"varying-b": "bee",
 					},
 				},
-			}).GetCommonLabels()).To(Equal(model.LabelSet{
+			}).GetCommonLabels()).To(Equal(map[string]string{
 				"shared-a": "a",
 			}))
 		})
@@ -63,7 +63,7 @@ var _ = Describe("Value Info", func() {
 						"b":        "bee",
 					},
 				},
-			}).GetCommonLabels()).To(Equal(model.LabelSet{
+			}).GetCommonLabels()).To(Equal(map[string]string{
 				"shared-a": "a",
 			}))
 		})
@@ -82,7 +82,7 @@ var _ = Describe("Value Info", func() {
 						"shared-b": "b",
 					},
 				},
-			}).GetCommonLabels()).To(Equal(model.LabelSet{
+			}).GetCommonLabels()).To(Equal(map[string]string{
 				"shared-a": "a",
 				"shared-b": "b",
 			}))

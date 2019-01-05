@@ -47,7 +47,7 @@ func main() {
 	}
 	failIfErr("Failed to run query: %s", err)
 
-	output.OutputValue(value)
+	output.FormatValue(value).RenderText()
 }
 
 func fail(msg string, args ...interface{}) {

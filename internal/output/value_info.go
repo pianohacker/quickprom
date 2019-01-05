@@ -13,9 +13,9 @@ type ValueInfo struct {
 	maxTimestamp model.Time
 }
 
-type labelInfoMap map[model.LabelName]*labelInfo
+type labelInfoMap map[string]*labelInfo
 type labelInfo struct {
-	valueSet    map[model.LabelValue]struct{}
+	valueSet    map[string]struct{}
 	occurrences int
 }
 
@@ -57,16 +57,16 @@ func MatrixInfo(matrix model.Matrix) *ValueInfo {
 
 func (v *ValueInfo) addMetric(metric model.Metric) {
 	for labelName, labelValue := range metric {
-		li, existed := v.labelInfo[labelName]
+		li, existed := v.labelInfo[string(labelName)]
 
 		if existed {
-			li.valueSet[labelValue] = struct{}{}
+			li.valueSet[string(labelValue)] = struct{}{}
 			li.occurrences++
 		} else {
-			v.labelInfo[labelName] = &labelInfo{
+			v.labelInfo[string(labelName)] = &labelInfo{
 				occurrences: 1,
-				valueSet: map[model.LabelValue]struct{}{
-					labelValue: struct{}{},
+				valueSet: map[string]struct{}{
+					string(labelValue): struct{}{},
 				},
 			}
 		}
@@ -83,13 +83,13 @@ func (v *ValueInfo) addTimestamp(timestamp model.Time) {
 	}
 }
 
-func (v *ValueInfo) GetCommonLabels() (unvaryingTags model.LabelSet) {
-	unvaryingTags = make(model.LabelSet)
+func (v *ValueInfo) GetCommonLabels() (unvaryingLabels map[string]string) {
+	unvaryingLabels = make(map[string]string)
 
 	for labelName, info := range v.labelInfo {
 		if len(info.valueSet) == 1 && info.occurrences == v.length {
 			for labelValue, _ := range info.valueSet {
-				unvaryingTags[labelName] = labelValue
+				unvaryingLabels[labelName] = labelValue
 			}
 		}
 	}
