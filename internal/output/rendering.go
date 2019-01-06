@@ -23,9 +23,9 @@ type Renderable interface {
 func FormatValue(value model.Value) Renderable {
 	switch value.Type() {
 	case model.ValVector:
-		return FormatVector(value.(model.Vector))
+		return FormatInstantVector(value.(model.Vector))
 	case model.ValMatrix:
-		return FormatMatrix(value.(model.Matrix))
+		return FormatRangeVector(value.(model.Matrix))
 	}
 
 	return nil
@@ -36,7 +36,7 @@ type tableOutput interface {
 	Render()
 }
 
-func (f *FormattedVector) RenderText() {
+func (f *FormattedInstantVector) RenderText() {
 	fmt.Print("Instant vector:")
 	if f.Empty {
 		fmt.Println(" (empty result)")
@@ -66,7 +66,7 @@ func (f *FormattedVector) RenderText() {
 	tw.Render()
 }
 
-func (f *FormattedMatrix) RenderText() {
+func (f *FormattedRangeVector) RenderText() {
 	fmt.Print("Range vector:")
 	if f.Empty {
 		fmt.Println(" (empty result)")

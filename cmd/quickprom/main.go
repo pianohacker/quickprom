@@ -75,10 +75,10 @@ func getRoundTripper(opts *cmdline.QuickPromOptions) http.RoundTripper {
 
 	if opts.CfAuth {
 		var err error
-		roundTripper, err = auth.GetCfAuthRoundTripper(roundTripper)
+		roundTripper, err = auth.CfAuthRoundTripper(roundTripper)
 		failIfErr("Error: %s", err)
 	} else if opts.BasicAuth != "" {
-		roundTripper = auth.GetBasicAuthRoundTripper(opts.BasicAuth, roundTripper)
+		roundTripper = auth.BasicAuthRoundTripper(opts.BasicAuth, roundTripper)
 	}
 
 	return roundTripper

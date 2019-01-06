@@ -11,9 +11,9 @@ import (
 )
 
 var _ = Describe("Value Info", func() {
-	Describe("GetCommonLabels", func() {
+	Describe("CommonLabels", func() {
 		It("includes common labels", func() {
-			Expect(output.VectorInfo(model.Vector{
+			Expect(output.InstantVectorInfo(model.Vector{
 				{
 					Metric: model.Metric{
 						"shared-a": "a",
@@ -26,14 +26,14 @@ var _ = Describe("Value Info", func() {
 						"shared-b": "b",
 					},
 				},
-			}).GetCommonLabels()).To(Equal(map[string]string{
+			}).CommonLabels()).To(Equal(map[string]string{
 				"shared-a": "a",
 				"shared-b": "b",
 			}))
 		})
 
 		It("ignores varying labels", func() {
-			Expect(output.VectorInfo(model.Vector{
+			Expect(output.InstantVectorInfo(model.Vector{
 				{
 					Metric: model.Metric{
 						"shared-a":  "a",
@@ -46,13 +46,13 @@ var _ = Describe("Value Info", func() {
 						"varying-b": "bee",
 					},
 				},
-			}).GetCommonLabels()).To(Equal(map[string]string{
+			}).CommonLabels()).To(Equal(map[string]string{
 				"shared-a": "a",
 			}))
 		})
 
 		It("ignores non-shared labels", func() {
-			Expect(output.VectorInfo(model.Vector{
+			Expect(output.InstantVectorInfo(model.Vector{
 				{
 					Metric: model.Metric{
 						"shared-a": "a",
@@ -64,13 +64,13 @@ var _ = Describe("Value Info", func() {
 						"b":        "bee",
 					},
 				},
-			}).GetCommonLabels()).To(Equal(map[string]string{
+			}).CommonLabels()).To(Equal(map[string]string{
 				"shared-a": "a",
 			}))
 		})
 
 		It("supports range vectors", func() {
-			Expect(output.MatrixInfo(model.Matrix{
+			Expect(output.RangeVectorInfo(model.Matrix{
 				{
 					Metric: model.Metric{
 						"shared-a": "a",
@@ -83,16 +83,16 @@ var _ = Describe("Value Info", func() {
 						"shared-b": "b",
 					},
 				},
-			}).GetCommonLabels()).To(Equal(map[string]string{
+			}).CommonLabels()).To(Equal(map[string]string{
 				"shared-a": "a",
 				"shared-b": "b",
 			}))
 		})
 	})
 
-	Describe("GetTimeRange", func() {
+	Describe("TimeRange", func() {
 		It("supports instant vectors", func() {
-			min, max := output.VectorInfo(model.Vector{
+			min, max := output.InstantVectorInfo(model.Vector{
 				{
 					Timestamp: 4,
 					Metric: model.Metric{
@@ -107,14 +107,14 @@ var _ = Describe("Value Info", func() {
 						"shared-b": "b",
 					},
 				},
-			}).GetTimeRange()
+			}).TimeRange()
 
 			Expect(min).To(Equal(time.Unix(0, 4e6)))
 			Expect(max).To(Equal(time.Unix(0, 4e6)))
 		})
 
 		It("supports range vectors", func() {
-			min, max := output.MatrixInfo(model.Matrix{
+			min, max := output.RangeVectorInfo(model.Matrix{
 				{
 					Metric: model.Metric{
 						"shared-a": "a",
@@ -148,7 +148,7 @@ var _ = Describe("Value Info", func() {
 						},
 					},
 				},
-			}).GetTimeRange()
+			}).TimeRange()
 
 			Expect(min).To(Equal(time.Unix(0, 4e6)))
 			Expect(max).To(Equal(time.Unix(0, 6e6)))

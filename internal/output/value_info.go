@@ -19,38 +19,38 @@ type labelInfo struct {
 	occurrences int
 }
 
-func VectorInfo(vector model.Vector) *ValueInfo {
+func InstantVectorInfo(instantVector model.Vector) *ValueInfo {
 	v := &ValueInfo{
 		labelInfo: make(labelInfoMap),
 	}
 
-	for _, sample := range vector {
+	for _, sample := range instantVector {
 		v.addMetric(sample.Metric)
 	}
-	v.length = len(vector)
+	v.length = len(instantVector)
 
 	if v.length > 0 {
-		v.minTimestamp = vector[0].Timestamp
-		v.maxTimestamp = vector[0].Timestamp
+		v.minTimestamp = instantVector[0].Timestamp
+		v.maxTimestamp = instantVector[0].Timestamp
 	}
 
 	return v
 }
 
-func MatrixInfo(matrix model.Matrix) *ValueInfo {
+func RangeVectorInfo(rangeVector model.Matrix) *ValueInfo {
 	v := &ValueInfo{
 		labelInfo:    make(labelInfoMap),
 		minTimestamp: model.Latest,
 		maxTimestamp: model.Earliest,
 	}
 
-	for _, series := range matrix {
+	for _, series := range rangeVector {
 		v.addMetric(series.Metric)
 		for _, sample := range series.Values {
 			v.addTimestamp(sample.Timestamp)
 		}
 	}
-	v.length = len(matrix)
+	v.length = len(rangeVector)
 
 	return v
 }
@@ -83,7 +83,7 @@ func (v *ValueInfo) addTimestamp(timestamp model.Time) {
 	}
 }
 
-func (v *ValueInfo) GetCommonLabels() (unvaryingLabels map[string]string) {
+func (v *ValueInfo) CommonLabels() (unvaryingLabels map[string]string) {
 	unvaryingLabels = make(map[string]string)
 
 	for labelName, info := range v.labelInfo {
@@ -97,6 +97,10 @@ func (v *ValueInfo) GetCommonLabels() (unvaryingLabels map[string]string) {
 	return
 }
 
-func (v *ValueInfo) GetTimeRange() (time.Time, time.Time) {
+func (v *ValueInfo) VaryingLabels() (varyingLabels []string) {
+	return
+}
+
+func (v *ValueInfo) TimeRange() (time.Time, time.Time) {
 	return v.minTimestamp.Time(), v.maxTimestamp.Time()
 }

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func GetCfAuthRoundTripper(innerRoundTripper http.RoundTripper) (http.RoundTripper, error) {
+func CfAuthRoundTripper(innerRoundTripper http.RoundTripper) (http.RoundTripper, error) {
 	getTokenCommand := exec.Command("cf", "oauth-token")
 	getTokenOutput, err := getTokenCommand.StdoutPipe()
 	err = getTokenCommand.Start()
@@ -33,7 +33,7 @@ func GetCfAuthRoundTripper(innerRoundTripper http.RoundTripper) (http.RoundTripp
 	}, nil
 }
 
-func GetBasicAuthRoundTripper(basicAuth string, innerRoundTripper http.RoundTripper) http.RoundTripper {
+func BasicAuthRoundTripper(basicAuth string, innerRoundTripper http.RoundTripper) http.RoundTripper {
 	return &authRoundTripper{
 		authorization:     "Basic " + base64.StdEncoding.EncodeToString([]byte(basicAuth)),
 		innerRoundTripper: innerRoundTripper,

@@ -7,7 +7,7 @@ import (
 	"github.com/prometheus/common/model"
 )
 
-type FormattedVector struct {
+type FormattedInstantVector struct {
 	Empty         bool
 	Time          time.Time
 	CommonLabels  map[string]string
@@ -20,7 +20,7 @@ type FormattedSample struct {
 	Value       float64
 }
 
-type FormattedMatrix struct {
+type FormattedRangeVector struct {
 	Empty         bool
 	MinTime       time.Time
 	MaxTime       time.Time
@@ -39,16 +39,16 @@ type FormattedSamplePair struct {
 	Value float64
 }
 
-func FormatVector(v model.Vector) *FormattedVector {
+func FormatInstantVector(v model.Vector) *FormattedInstantVector {
 	if len(v) == 0 {
-		return &FormattedVector{Empty: true}
+		return &FormattedInstantVector{Empty: true}
 	}
 
-	result := &FormattedVector{}
+	result := &FormattedInstantVector{}
 
 	result.Time = v[0].Timestamp.Time()
 
-	result.CommonLabels, result.VaryingLabels = getCommonAndVaryingLabels(VectorInfo(v))
+	result.CommonLabels, result.VaryingLabels = getCommonAndVaryingLabels(InstantVectorInfo(v))
 
 	for _, s := range v {
 		var labelValues []string
@@ -65,16 +65,16 @@ func FormatVector(v model.Vector) *FormattedVector {
 	return result
 }
 
-func FormatMatrix(m model.Matrix) *FormattedMatrix {
+func FormatRangeVector(m model.Matrix) *FormattedRangeVector {
 	if len(m) == 0 {
-		return &FormattedMatrix{Empty: true}
+		return &FormattedRangeVector{Empty: true}
 	}
 
-	result := &FormattedMatrix{}
+	result := &FormattedRangeVector{}
 
-	info := MatrixInfo(m)
+	info := RangeVectorInfo(m)
 
-	result.MinTime, result.MaxTime = info.GetTimeRange()
+	result.MinTime, result.MaxTime = info.TimeRange()
 	result.CommonLabels, result.VaryingLabels = getCommonAndVaryingLabels(info)
 
 	for _, s := range m {
@@ -99,7 +99,7 @@ func FormatMatrix(m model.Matrix) *FormattedMatrix {
 // TODO: move me to value_info.go
 func getCommonAndVaryingLabels(info *ValueInfo) (commonLabels map[string]string, varyingLabels []string) {
 	if info.length > 1 {
-		commonLabels = info.GetCommonLabels()
+		commonLabels = info.CommonLabels()
 	}
 
 	for labelName, _ := range info.labelInfo {

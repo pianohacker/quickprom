@@ -12,15 +12,15 @@ import (
 )
 
 var _ = Describe("Formatting", func() {
-	Describe("FormatVector()", func() {
-		It("can handle an empty vector", func() {
-			formatted := output.FormatVector(model.Vector{})
+	Describe("FormatInstantVector()", func() {
+		It("can handle an empty instant vector", func() {
+			formatted := output.FormatInstantVector(model.Vector{})
 
 			Expect(formatted.Empty).To(BeTrue())
 		})
 
-		It("can handle a single-sample vector", func() {
-			formatted := output.FormatVector(model.Vector{
+		It("can handle a single-sample instant vector", func() {
+			formatted := output.FormatInstantVector(model.Vector{
 				{
 					Timestamp: 4,
 					Metric: model.Metric{
@@ -40,8 +40,8 @@ var _ = Describe("Formatting", func() {
 			}))
 		})
 
-		It("can handle a multi-sample vector", func() {
-			formatted := output.FormatVector(model.Vector{
+		It("can handle a multi-sample instant vector", func() {
+			formatted := output.FormatInstantVector(model.Vector{
 				{
 					Timestamp: 4,
 					Metric: model.Metric{
@@ -93,15 +93,15 @@ var _ = Describe("Formatting", func() {
 		})
 	})
 
-	Describe("FormatMatrix()", func() {
-		It("can handle an empty matrix", func() {
-			formatted := output.FormatMatrix(model.Matrix{})
+	Describe("FormatRangeVector()", func() {
+		It("can handle an empty range vector", func() {
+			formatted := output.FormatRangeVector(model.Matrix{})
 
 			Expect(formatted.Empty).To(BeTrue())
 		})
 
-		It("can handle a single-series matrix", func() {
-			formatted := output.FormatMatrix(model.Matrix{
+		It("can handle a single-series range vector", func() {
+			formatted := output.FormatRangeVector(model.Matrix{
 				{
 					Metric: model.Metric{
 						"label": "value",
@@ -141,8 +141,8 @@ var _ = Describe("Formatting", func() {
 			}))
 		})
 
-		It("can handle a multi-series matrix", func() {
-			formatted := output.FormatMatrix(model.Matrix{
+		It("can handle a multi-series range vector", func() {
+			formatted := output.FormatRangeVector(model.Matrix{
 				{
 					Metric: model.Metric{
 						"varying-label-a": "varying-value-1",
