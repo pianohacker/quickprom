@@ -1,6 +1,7 @@
 package output
 
 import (
+	"sort"
 	"time"
 
 	"github.com/prometheus/common/model"
@@ -87,7 +88,7 @@ func (v *ValueInfo) CommonLabels() (unvaryingLabels map[string]string) {
 	unvaryingLabels = make(map[string]string)
 
 	for labelName, info := range v.labelInfo {
-		if len(info.valueSet) == 1 && info.occurrences == v.length {
+		if v.isLabelCommon(labelName) {
 			for labelValue, _ := range info.valueSet {
 				unvaryingLabels[labelName] = labelValue
 			}
@@ -98,7 +99,24 @@ func (v *ValueInfo) CommonLabels() (unvaryingLabels map[string]string) {
 }
 
 func (v *ValueInfo) VaryingLabels() (varyingLabels []string) {
+	for labelName, _ := range v.labelInfo {
+		if !v.isLabelCommon(labelName) {
+			varyingLabels = append(varyingLabels, labelName)
+		}
+	}
+	sort.Sort(sort.StringSlice(varyingLabels))
+
 	return
+}
+
+
+func (v *ValueInfo) isLabelCommon(labelName string) bool {
+	if v.length <= 1 {
+		return false
+	}
+
+	info := v.labelInfo[labelName]
+	return len(info.valueSet) == 1 && info.occurrences == v.length
 }
 
 func (v *ValueInfo) TimeRange() (time.Time, time.Time) {

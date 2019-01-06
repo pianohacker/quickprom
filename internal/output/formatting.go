@@ -1,7 +1,6 @@
 package output
 
 import (
-	"sort"
 	"time"
 
 	"github.com/prometheus/common/model"
@@ -48,7 +47,9 @@ func FormatInstantVector(v model.Vector) *FormattedInstantVector {
 
 	result.Time = v[0].Timestamp.Time()
 
-	result.CommonLabels, result.VaryingLabels = getCommonAndVaryingLabels(InstantVectorInfo(v))
+	info := InstantVectorInfo(v)
+	result.CommonLabels = info.CommonLabels()
+	result.VaryingLabels = info.VaryingLabels()
 
 	for _, s := range v {
 		var labelValues []string
@@ -73,9 +74,9 @@ func FormatRangeVector(m model.Matrix) *FormattedRangeVector {
 	result := &FormattedRangeVector{}
 
 	info := RangeVectorInfo(m)
-
+	result.CommonLabels = info.CommonLabels()
+	result.VaryingLabels = info.VaryingLabels()
 	result.MinTime, result.MaxTime = info.TimeRange()
-	result.CommonLabels, result.VaryingLabels = getCommonAndVaryingLabels(info)
 
 	for _, s := range m {
 		var values []FormattedSamplePair
@@ -94,24 +95,6 @@ func FormatRangeVector(m model.Matrix) *FormattedRangeVector {
 	}
 
 	return result
-}
-
-// TODO: move me to value_info.go
-func getCommonAndVaryingLabels(info *ValueInfo) (commonLabels map[string]string, varyingLabels []string) {
-	if info.length > 1 {
-		commonLabels = info.CommonLabels()
-	}
-
-	for labelName, _ := range info.labelInfo {
-		if _, ok := commonLabels[labelName]; ok {
-			continue
-		}
-
-		varyingLabels = append(varyingLabels, labelName)
-	}
-	sort.Sort(sort.StringSlice(varyingLabels))
-
-	return
 }
 
 func getLabelValues(labelNames []string, metric model.Metric) (labelValues []string) {

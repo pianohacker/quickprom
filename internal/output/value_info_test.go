@@ -11,9 +11,23 @@ import (
 )
 
 var _ = Describe("Value Info", func() {
-	Describe("CommonLabels", func() {
+	Describe("CommonLabels/VaryingLabels", func() {
+		It("does not consider labels common for a 1-element value", func() {
+			info := output.InstantVectorInfo(model.Vector{
+				{
+					Metric: model.Metric{
+						"b": "b",
+						"a": "a",
+					},
+				},
+			})
+
+			Expect(info.CommonLabels()).To(BeEmpty())
+			Expect(info.VaryingLabels()).To(Equal([]string{"a", "b"}))
+		})
+
 		It("includes common labels", func() {
-			Expect(output.InstantVectorInfo(model.Vector{
+			info := output.InstantVectorInfo(model.Vector{
 				{
 					Metric: model.Metric{
 						"shared-a": "a",
@@ -26,14 +40,17 @@ var _ = Describe("Value Info", func() {
 						"shared-b": "b",
 					},
 				},
-			}).CommonLabels()).To(Equal(map[string]string{
+			})
+
+			Expect(info.CommonLabels()).To(Equal(map[string]string{
 				"shared-a": "a",
 				"shared-b": "b",
 			}))
+			Expect(info.VaryingLabels()).To(BeEmpty())
 		})
 
 		It("ignores varying labels", func() {
-			Expect(output.InstantVectorInfo(model.Vector{
+			info := output.InstantVectorInfo(model.Vector{
 				{
 					Metric: model.Metric{
 						"shared-a":  "a",
@@ -46,13 +63,16 @@ var _ = Describe("Value Info", func() {
 						"varying-b": "bee",
 					},
 				},
-			}).CommonLabels()).To(Equal(map[string]string{
+			})
+
+			Expect(info.CommonLabels()).To(Equal(map[string]string{
 				"shared-a": "a",
 			}))
+			Expect(info.VaryingLabels()).To(Equal([]string{"varying-b"}))
 		})
 
 		It("ignores non-shared labels", func() {
-			Expect(output.InstantVectorInfo(model.Vector{
+			info := output.InstantVectorInfo(model.Vector{
 				{
 					Metric: model.Metric{
 						"shared-a": "a",
@@ -64,28 +84,38 @@ var _ = Describe("Value Info", func() {
 						"b":        "bee",
 					},
 				},
-			}).CommonLabels()).To(Equal(map[string]string{
+			})
+
+			Expect(info.CommonLabels()).To(Equal(map[string]string{
 				"shared-a": "a",
 			}))
+			Expect(info.VaryingLabels()).To(Equal([]string{"b"}))
 		})
 
 		It("supports range vectors", func() {
-			Expect(output.RangeVectorInfo(model.Matrix{
+			info := output.RangeVectorInfo(model.Matrix{
 				{
 					Metric: model.Metric{
 						"shared-a": "a",
-						"shared-b": "b",
+						"varying-c": "c",
+						"varying-b": "b",
 					},
 				},
 				{
 					Metric: model.Metric{
 						"shared-a": "a",
-						"shared-b": "b",
+						"varying-c": "cee",
+						"varying-b": "bee",
 					},
 				},
-			}).CommonLabels()).To(Equal(map[string]string{
+			})
+
+			Expect(info.CommonLabels()).To(Equal(map[string]string{
 				"shared-a": "a",
-				"shared-b": "b",
+			}))
+			Expect(info.VaryingLabels()).To(Equal([]string{
+				"varying-b",
+				"varying-c",
 			}))
 		})
 	})
