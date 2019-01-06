@@ -96,14 +96,14 @@ var _ = Describe("Value Info", func() {
 			info := output.RangeVectorInfo(model.Matrix{
 				{
 					Metric: model.Metric{
-						"shared-a": "a",
+						"shared-a":  "a",
 						"varying-c": "c",
 						"varying-b": "b",
 					},
 				},
 				{
 					Metric: model.Metric{
-						"shared-a": "a",
+						"shared-a":  "a",
 						"varying-c": "cee",
 						"varying-b": "bee",
 					},

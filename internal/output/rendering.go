@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/apcera/termtables"
 	isatty "github.com/mattn/go-isatty"
-	"github.com/olekukonko/tablewriter"
 	"github.com/prometheus/common/model"
 )
 
@@ -33,8 +33,8 @@ func FormatValue(value model.Value) Renderable {
 }
 
 type tableOutput interface {
-	Append([]string)
-	Render()
+	AddRow(...interface{}) *termtables.Row
+	Render() string
 }
 
 func (f *FormattedInstantVector) RenderText() {
@@ -43,13 +43,11 @@ func (f *FormattedInstantVector) RenderText() {
 		fmt.Println(" (empty result)")
 		return
 	}
-	fmt.Println("")
+	fmt.Println()
 
 	fmt.Printf("  At: %s\n", f.Time.Format(TimeFormatWithTZ))
 
 	outputCommonLabels(f.CommonLabels)
-
-	fmt.Println("")
 
 	// Value column
 	header := append(f.VaryingLabels, "")
@@ -57,14 +55,18 @@ func (f *FormattedInstantVector) RenderText() {
 	tw := getTableWriter(header)
 
 	for _, sample := range f.Samples {
-		row := sample.LabelValues
+		var row []interface{}
+
+		for _, labelValue := range sample.LabelValues {
+			row = append(row, labelValue)
+		}
 
 		row = append(row, fmt.Sprintf("%f", sample.Value))
 
-		tw.Append(row)
+		tw.AddRow(row...)
 	}
 
-	tw.Render()
+	fmt.Print(tw.Render())
 }
 
 func (f *FormattedRangeVector) RenderText() {
@@ -73,7 +75,7 @@ func (f *FormattedRangeVector) RenderText() {
 		fmt.Println(" (empty result)")
 		return
 	}
-	fmt.Println("")
+	fmt.Println()
 
 	outputCommonLabels(f.CommonLabels)
 
@@ -86,7 +88,7 @@ func (f *FormattedRangeVector) RenderText() {
 		timestampFormat = TimeFormat
 	}
 
-	fmt.Println("")
+	fmt.Println()
 
 	for _, series := range f.Series {
 		for i, labelName := range f.VaryingLabels {
@@ -117,35 +119,33 @@ func outputCommonLabels(commonLabels map[string]string) {
 		}
 		fmt.Printf("%s %s", bold(labelName+":"), commonLabels[labelName])
 	}
-	fmt.Println("")
+	fmt.Println()
 }
 
-func getTableWriter(header []string) tableOutput {
+func getTableWriter(headers []string) tableOutput {
+	var tw tableOutput
 	if outputIsATty {
-		tw := tablewriter.NewWriter(os.Stdout)
-		tw.SetHeader(header)
-		tw.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-		tw.SetHeaderLine(false)
-		tw.SetAutoFormatHeaders(false)
-		tw.SetBorder(false)
-		tw.SetCenterSeparator("")
-		tw.SetColumnSeparator("")
-		tw.SetRowSeparator("")
+		tt := termtables.CreateTable()
+		tt.Style.SkipBorder = true
+		tt.Style.BorderX = ""
+		tt.Style.BorderY = ""
+		tt.Style.BorderI = ""
 
-		var headerColors []tablewriter.Colors
-
-		for range header {
-			headerColors = append(headerColors, tablewriter.Colors{tablewriter.Bold})
+		var headerVals []interface{}
+		for _, header := range headers {
+			headerVals = append(headerVals, bold(header))
 		}
 
-		tw.SetHeaderColor(headerColors...)
+		tt.AddHeaders(headerVals...)
 
-		return tw
+		tw = tt
 	} else {
-		return &dumbTableWriter{
-			header: header,
-		}
+		fmt.Println()
+		fmt.Println(strings.Join(headers, "\t"))
+		tw = &dumbTableWriter{}
 	}
+
+	return tw
 }
 
 func bold(s string) string {
@@ -158,24 +158,28 @@ func bold(s string) string {
 
 var outputIsATty = isatty.IsTerminal(os.Stdout.Fd())
 
-type dumbTableWriter struct {
-	header []string
-}
+type dumbTableWriter struct{}
 
-func (d *dumbTableWriter) Append(row []string) {
-	if d.header != nil {
-		fmt.Println(strings.Join(d.header, "\t"))
-		d.header = nil
+func (d *dumbTableWriter) AddRow(cells ...interface{}) *termtables.Row {
+	for i, v := range cells {
+		if i != 0 {
+			fmt.Print("\t")
+		}
+		fmt.Print(v)
 	}
 
-	fmt.Println(strings.Join(row, "\t"))
+	fmt.Println()
+
+	return nil
 }
 
-func (*dumbTableWriter) Render() {}
+func (*dumbTableWriter) Render() string {
+	return ""
+}
 
 type jsonValue struct {
 	ResultType model.ValueType `json:"resultType"`
-	Result model.Value `json:"result"`
+	Result     model.Value     `json:"result"`
 }
 
 func RenderJson(value model.Value) error {
@@ -184,6 +188,6 @@ func RenderJson(value model.Value) error {
 
 	return enc.Encode(&jsonValue{
 		ResultType: value.Type(),
-		Result: value,
+		Result:     value,
 	})
 }
