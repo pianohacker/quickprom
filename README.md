@@ -81,24 +81,25 @@ Instant vector:
       0.99  prepare_time  0.000017
       0.99  queue_time    0.000003
       0.99  result_sort   0.000001
-$ quickprom range 'prometheus_engine_query_duration_seconds' --start '1:00' --end '2:00' --step '30m'
+$ quickprom range 'prometheus_engine_query_duration_seconds' --start '1:00' --end '2:00' --step '30m' --range-table
 Range vector:
   All have labels: __name__: prometheus_engine_query_duration_seconds, instance: promserver.example, job: prometheus
   All on date: 2019-01-04
+  All timestamps end with: 00.000
 
-quantile: 0.5, slice: inner_eval:
-    01:00:00.000: 0.000002
-    01:30:00.000: 0.000002
-    02:00:00.000: 0.000002
-quantile: 0.5, slice: prepare_time:
-    01:00:00.000: 0.000004
-    01:30:00.000: 0.000004
-    02:00:00.000: 0.000004
-quantile: 0.5, slice: queue_time:
-    01:00:00.000: 0.000001
-    01:30:00.000: 0.000001
-    02:00:00.000: 0.000001
-...
+ quantile  slice         01:00     01:30     02:00
+ 0.5       inner_eval    0.000002  0.000002  0.000002
+ 0.5       prepare_time  0.000004  0.000004  0.000004
+ 0.5       queue_time    0.000001  0.000001  0.000001
+ 0.5       result_sort   0.000001  0.000001  0.000001
+ 0.9       inner_eval    0.000003  0.000003  0.000003
+ 0.9       prepare_time  0.000007  0.000007  0.000007
+ 0.9       queue_time    0.000002  0.000002  0.000002
+ 0.9       result_sort   0.000001  0.000001  0.000002
+ 0.99      inner_eval    0.000017  0.000023  0.000016
+ 0.99      prepare_time  0.000020  0.000019  0.000017
+ 0.99      queue_time    0.000003  0.000003  0.000003
+ 0.99      result_sort   0.000003  0.000003  0.000003
 $ quickprom 'avg_over_time(prometheus_engine_query_duration_seconds[30s])' --time '4:00'
 Instant vector:
   At: 2019-01-04 04:00:00.000 MST
@@ -121,7 +122,8 @@ Instant vector:
 
 ## TODO
 
-- [ ] Range vectors as tables
+- [ ] Better automatic value formatting
+- [ ] Automatically enable range tables, disable when terminal too narrow (needs a decent heuristic)
 - [ ] Custom sorting
 - [ ] Sparklines
 - [ ] Scalar support

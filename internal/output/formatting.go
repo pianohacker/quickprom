@@ -23,6 +23,7 @@ type FormattedRangeVector struct {
 	Empty         bool
 	MinTime       time.Time
 	MaxTime       time.Time
+	SeenTimes     []time.Time
 	CommonLabels  map[string]string
 	VaryingLabels []string
 	Series        []FormattedSeries
@@ -76,7 +77,9 @@ func FormatRangeVector(m model.Matrix) *FormattedRangeVector {
 	info := RangeVectorInfo(m)
 	result.CommonLabels = info.CommonLabels()
 	result.VaryingLabels = info.VaryingLabels()
-	result.MinTime, result.MaxTime = info.TimeRange()
+	result.SeenTimes = info.SeenTimes()
+	result.MinTime = result.SeenTimes[0]
+	result.MaxTime = result.SeenTimes[len(result.SeenTimes)-1]
 
 	for _, s := range m {
 		var values []FormattedSamplePair
@@ -103,4 +106,44 @@ func getLabelValues(labelNames []string, metric model.Metric) (labelValues []str
 	}
 
 	return
+}
+
+type DateParts struct {
+	Date            bool
+	ZeroSecond      bool
+	ZeroMillisecond bool
+}
+
+func SharedDateParts(times []time.Time) *DateParts {
+	if len(times) <= 1 {
+		return &DateParts{}
+	}
+
+	result := &DateParts{
+		Date:            true,
+		ZeroSecond:      true,
+		ZeroMillisecond: true,
+	}
+
+	firstYear, firstMonth, firstDay := times[0].Date()
+
+	for i, t := range times {
+		if i != 0 && result.Date {
+			year, month, day := t.Date()
+
+			if year != firstYear || month != firstMonth || day != firstDay {
+				result.Date = false
+			}
+		}
+
+		if result.ZeroMillisecond {
+			result.ZeroMillisecond = t.Nanosecond() == 0
+		}
+
+		if result.ZeroSecond {
+			result.ZeroSecond = result.ZeroMillisecond && t.Second() == 0
+		}
+	}
+
+	return result
 }

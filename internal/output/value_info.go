@@ -8,10 +8,9 @@ import (
 )
 
 type ValueInfo struct {
-	labelInfo    labelInfoMap
-	length       int
-	minTimestamp model.Time
-	maxTimestamp model.Time
+	labelInfo      labelInfoMap
+	length         int
+	seenTimestamps map[model.Time]struct{}
 }
 
 type labelInfoMap map[string]*labelInfo
@@ -31,8 +30,9 @@ func InstantVectorInfo(instantVector model.Vector) *ValueInfo {
 	v.length = len(instantVector)
 
 	if v.length > 0 {
-		v.minTimestamp = instantVector[0].Timestamp
-		v.maxTimestamp = instantVector[0].Timestamp
+		v.seenTimestamps = map[model.Time]struct{}{
+			instantVector[0].Timestamp: struct{}{},
+		}
 	}
 
 	return v
@@ -40,9 +40,8 @@ func InstantVectorInfo(instantVector model.Vector) *ValueInfo {
 
 func RangeVectorInfo(rangeVector model.Matrix) *ValueInfo {
 	v := &ValueInfo{
-		labelInfo:    make(labelInfoMap),
-		minTimestamp: model.Latest,
-		maxTimestamp: model.Earliest,
+		labelInfo:      make(labelInfoMap),
+		seenTimestamps: map[model.Time]struct{}{},
 	}
 
 	for _, series := range rangeVector {
@@ -75,13 +74,7 @@ func (v *ValueInfo) addMetric(metric model.Metric) {
 }
 
 func (v *ValueInfo) addTimestamp(timestamp model.Time) {
-	if timestamp > v.maxTimestamp {
-		v.maxTimestamp = timestamp
-	}
-
-	if timestamp < v.minTimestamp {
-		v.minTimestamp = timestamp
-	}
+	v.seenTimestamps[timestamp] = struct{}{}
 }
 
 func (v *ValueInfo) CommonLabels() (unvaryingLabels map[string]string) {
@@ -118,6 +111,14 @@ func (v *ValueInfo) isLabelCommon(labelName string) bool {
 	return len(info.valueSet) == 1 && info.occurrences == v.length
 }
 
-func (v *ValueInfo) TimeRange() (time.Time, time.Time) {
-	return v.minTimestamp.Time(), v.maxTimestamp.Time()
+func (v *ValueInfo) SeenTimes() (seenTimes []time.Time) {
+	for t, _ := range v.seenTimestamps {
+		seenTimes = append(seenTimes, t.Time())
+	}
+
+	sort.Slice(seenTimes, func(i, j int) bool {
+		return seenTimes[i].Before(seenTimes[j])
+	})
+
+	return
 }

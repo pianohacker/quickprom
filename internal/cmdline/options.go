@@ -29,6 +29,7 @@ Global options:
   --cf-auth               Automatically use current oAuth token from ` + "`cf`" + `
                           (QUICKPROM_CF_AUTH)
   --json                  Output JSON result (QUICKPROM_JSON)
+  -b, --range-table       Output range vectors as tables (QUICKPROM_RANGE_TABLE)
 
 Instant query options:
   -i, --time TIME         Evaluate instant query at ` + "`TIME`" + `
@@ -60,6 +61,7 @@ type QuickPromOptions struct {
 	BasicAuth     string `docopt:"--basic-auth" env:"QUICKPROM_BASIC_AUTH"`
 	CfAuth        bool   `docopt:"--cf-auth" env:"QUICKPROM_CF_AUTH"`
 	Json          bool   `docopt:"--json" env:"QUICKPROM_JSON"`
+	RangeTable    bool   `docopt:"--range-table" env:"QUICKPROM_RANGE_TABLE"`
 
 	TimeInput string `docopt:"--time"`
 	Time      time.Time

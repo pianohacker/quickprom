@@ -40,7 +40,9 @@ func main() {
 	if opts.Json {
 		failIfErr("Failed to marshal result to JSON: %s", output.RenderJson(value))
 	} else {
-		output.FormatValue(value).RenderText()
+		output.FormatValue(value).RenderText(&output.RenderOptions{
+			RangeVectorAsTable: opts.RangeTable,
+		})
 	}
 }
 

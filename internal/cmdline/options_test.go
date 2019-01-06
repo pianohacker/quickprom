@@ -153,6 +153,57 @@ var _ = Describe("Options", func() {
 			},
 		),
 
+		Entry("can parse --range-table from command line",
+			[]string{
+				"quickprom",
+				"--range-table",
+				"query",
+			},
+			map[string]string{
+				"QUICKPROM_TARGET": "env_target",
+			},
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.RangeTable).To(BeTrue())
+			},
+		),
+
+		Entry("can parse --range-table from short option",
+			[]string{
+				"quickprom",
+				"-b",
+				"query",
+			},
+			map[string]string{
+				"QUICKPROM_TARGET": "env_target",
+			},
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.RangeTable).To(BeTrue())
+			},
+		),
+
+		Entry("can parse --range-table from environment variable",
+			[]string{
+				"quickprom",
+				"query",
+			},
+			map[string]string{
+				"QUICKPROM_TARGET":      "env_target",
+				"QUICKPROM_RANGE_TABLE": "true",
+			},
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.RangeTable).To(BeTrue())
+			},
+		),
+
 		Entry("can parse a timestamp when --time is given",
 			[]string{
 				"quickprom",
@@ -287,6 +338,19 @@ var _ = Describe("Options", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(opts.RangeEnd).To(BeTemporally("~", time.Now()))
+			},
+		),
+
+		Entry("can parse --json from environment variable",
+			[]string{"quickprom", "-t", "target", "query"},
+			map[string]string{
+				"QUICKPROM_JSON": "true",
+			},
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.Json).To(BeTrue())
 			},
 		),
 

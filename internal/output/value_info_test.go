@@ -120,36 +120,25 @@ var _ = Describe("Value Info", func() {
 		})
 	})
 
-	Describe("TimeRange", func() {
+	Describe("SeenTimes", func() {
 		It("supports instant vectors", func() {
-			min, max := output.InstantVectorInfo(model.Vector{
+			info := output.InstantVectorInfo(model.Vector{
 				{
 					Timestamp: 4,
-					Metric: model.Metric{
-						"shared-a": "a",
-						"shared-b": "b",
-					},
 				},
 				{
 					Timestamp: 4,
-					Metric: model.Metric{
-						"shared-a": "a",
-						"shared-b": "b",
-					},
 				},
-			}).TimeRange()
+			})
 
-			Expect(min).To(Equal(time.Unix(0, 4e6)))
-			Expect(max).To(Equal(time.Unix(0, 4e6)))
+			Expect(info.SeenTimes()).To(Equal([]time.Time{
+				time.Unix(0, 4e6),
+			}))
 		})
 
 		It("supports range vectors", func() {
-			min, max := output.RangeVectorInfo(model.Matrix{
+			info := output.RangeVectorInfo(model.Matrix{
 				{
-					Metric: model.Metric{
-						"shared-a": "a",
-						"shared-b": "b",
-					},
 					Values: []model.SamplePair{
 						{
 							Timestamp: 4,
@@ -157,10 +146,6 @@ var _ = Describe("Value Info", func() {
 					},
 				},
 				{
-					Metric: model.Metric{
-						"shared-a": "a",
-						"shared-b": "b",
-					},
 					Values: []model.SamplePair{
 						{
 							Timestamp: 6,
@@ -168,20 +153,50 @@ var _ = Describe("Value Info", func() {
 					},
 				},
 				{
-					Metric: model.Metric{
-						"shared-a": "a",
-						"shared-b": "b",
-					},
 					Values: []model.SamplePair{
 						{
 							Timestamp: 5,
 						},
 					},
 				},
-			}).TimeRange()
+			})
 
-			Expect(min).To(Equal(time.Unix(0, 4e6)))
-			Expect(max).To(Equal(time.Unix(0, 6e6)))
+			Expect(info.SeenTimes()).To(Equal([]time.Time{
+				time.Unix(0, 4e6),
+				time.Unix(0, 5e6),
+				time.Unix(0, 6e6),
+			}))
+		})
+
+		It("sorts ands ignores duplicates", func() {
+			info := output.RangeVectorInfo(model.Matrix{
+				{
+					Values: []model.SamplePair{
+						{
+							Timestamp: 5,
+						},
+					},
+				},
+				{
+					Values: []model.SamplePair{
+						{
+							Timestamp: 4,
+						},
+					},
+				},
+				{
+					Values: []model.SamplePair{
+						{
+							Timestamp: 4,
+						},
+					},
+				},
+			})
+
+			Expect(info.SeenTimes()).To(Equal([]time.Time{
+				time.Unix(0, 4e6),
+				time.Unix(0, 5e6),
+			}))
 		})
 	})
 })

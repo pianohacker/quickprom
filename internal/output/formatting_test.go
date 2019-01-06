@@ -8,6 +8,7 @@ import (
 	"github.com/pianohacker/quickprom/internal/output"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -228,4 +229,94 @@ var _ = Describe("Formatting", func() {
 			}))
 		})
 	})
+
+	DescribeTable("SharedDateParts",
+		func(
+			expected *output.DateParts,
+			times ...time.Time,
+		) {
+			Expect(output.SharedDateParts(times)).To(Equal(expected))
+		},
+
+		Entry("no input",
+			&output.DateParts{
+				Date:            false,
+				ZeroSecond:      false,
+				ZeroMillisecond: false,
+			},
+		),
+
+		Entry("one input",
+			&output.DateParts{
+				Date:            false,
+				ZeroSecond:      false,
+				ZeroMillisecond: false,
+			},
+			mktime(2006, 1, 2, 3, 4, 5, 6),
+		),
+
+		Entry("shared date",
+			&output.DateParts{
+				Date:            true,
+				ZeroSecond:      false,
+				ZeroMillisecond: false,
+			},
+			mktime(2006, 1, 2, 3, 4, 5, 6),
+			mktime(2006, 1, 2, 4, 4, 5, 6),
+			mktime(2006, 1, 2, 5, 4, 5, 6),
+		),
+
+		Entry("not shared date",
+			&output.DateParts{
+				Date:            false,
+				ZeroSecond:      false,
+				ZeroMillisecond: false,
+			},
+			mktime(2006, 1, 2, 3, 4, 5, 6),
+			mktime(2006, 1, 2, 3, 4, 5, 6),
+			mktime(2006, 1, 3, 3, 4, 5, 6),
+		),
+
+		Entry("all zero millisecond",
+			&output.DateParts{
+				Date:            true,
+				ZeroSecond:      false,
+				ZeroMillisecond: true,
+			},
+			mktime(2006, 1, 2, 3, 4, 5, 0),
+			mktime(2006, 1, 2, 4, 4, 5, 0),
+			mktime(2006, 1, 2, 5, 4, 5, 0),
+		),
+
+		Entry("all zero second",
+			&output.DateParts{
+				Date:            true,
+				ZeroSecond:      true,
+				ZeroMillisecond: true,
+			},
+			mktime(2006, 1, 2, 3, 4, 0, 0),
+			mktime(2006, 1, 2, 4, 4, 0, 0),
+			mktime(2006, 1, 2, 5, 4, 0, 0),
+		),
+
+		Entry("not all zero second when millisecond nonzero",
+			&output.DateParts{
+				Date:            true,
+				ZeroSecond:      false,
+				ZeroMillisecond: false,
+			},
+			mktime(2006, 1, 2, 3, 4, 0, 1),
+			mktime(2006, 1, 2, 4, 4, 0, 1),
+			mktime(2006, 1, 2, 5, 4, 0, 1),
+		),
+	)
 })
+
+func mktime(y int, mo time.Month, d int, h, m, s, ms int) time.Time {
+	return time.Date(
+		y, mo, d,
+		h, m, s,
+		ms*1e6,
+		time.Local,
+	)
+}
