@@ -1,6 +1,7 @@
 package output
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -171,3 +172,18 @@ func (d *dumbTableWriter) Append(row []string) {
 }
 
 func (*dumbTableWriter) Render() {}
+
+type jsonValue struct {
+	ResultType model.ValueType `json:"resultType"`
+	Result model.Value `json:"result"`
+}
+
+func RenderJson(value model.Value) error {
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+
+	return enc.Encode(&jsonValue{
+		ResultType: value.Type(),
+		Result: value,
+	})
+}

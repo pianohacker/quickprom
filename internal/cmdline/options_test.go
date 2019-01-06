@@ -75,7 +75,6 @@ var _ = Describe("Options", func() {
 			},
 
 			func(opts *cmdline.QuickPromOptions, err error) {
-				opts, err = cmdline.ParseOptsAndEnv(false)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(opts.SkipTlsVerify).To(BeTrue())
@@ -124,10 +123,33 @@ var _ = Describe("Options", func() {
 			},
 
 			func(opts *cmdline.QuickPromOptions, err error) {
-				opts, err = cmdline.ParseOptsAndEnv(false)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(opts.CfAuth).To(BeTrue())
+			},
+		),
+
+		Entry("can parse --json from command line",
+			[]string{"quickprom", "-t", "target", "--json", "query"},
+			nil,
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.Json).To(BeTrue())
+			},
+		),
+
+		Entry("can parse --json from environment variable",
+			[]string{"quickprom", "-t", "target", "query"},
+			map[string]string{
+				"QUICKPROM_JSON": "true",
+			},
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.Json).To(BeTrue())
 			},
 		),
 

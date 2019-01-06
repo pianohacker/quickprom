@@ -28,6 +28,7 @@ Global options:
   --basic-auth USER:PASS  Use basic authentication (QUICKPROM_BASIC_AUTH)
   --cf-auth               Automatically use current oAuth token from ` + "`cf`" + `
                           (QUICKPROM_CF_AUTH)
+  --json                  Output JSON result (QUICKPROM_JSON)
 
 Instant query options:
   -i, --time TIME         Evaluate instant query at ` + "`TIME`" + `
@@ -58,6 +59,7 @@ type QuickPromOptions struct {
 	SkipTlsVerify bool   `docopt:"--skip-tls-verify" env:"QUICKPROM_SKIP_TLS_VERIFY"`
 	BasicAuth     string `docopt:"--basic-auth" env:"QUICKPROM_BASIC_AUTH"`
 	CfAuth        bool   `docopt:"--cf-auth" env:"QUICKPROM_CF_AUTH"`
+	Json          bool   `docopt:"--json" env:"QUICKPROM_JSON"`
 
 	TimeInput string `docopt:"--time"`
 	Time      time.Time

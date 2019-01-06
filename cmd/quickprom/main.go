@@ -37,7 +37,11 @@ func main() {
 	}
 	failIfErr("Failed to run query: %s", err)
 
-	output.FormatValue(value).RenderText()
+	if opts.Json {
+		failIfErr("Failed to marshal result to JSON: %s", output.RenderJson(value))
+	} else {
+		output.FormatValue(value).RenderText()
+	}
 }
 
 func fail(msg string, args ...interface{}) {
@@ -45,13 +49,12 @@ func fail(msg string, args ...interface{}) {
 	os.Exit(1)
 }
 
-func failIfErr(msg string, args ...interface{}) {
-	lastArg := args[len(args)-1]
-	if lastArg == nil {
+func failIfErr(msg string, err error) {
+	if err == nil {
 		return
 	}
 
-	fail(msg, args...)
+	fail(msg, err)
 }
 
 func getPromClient(opts *cmdline.QuickPromOptions) v1.API {

@@ -31,6 +31,7 @@ $ GO111MODULE=on go get github.com/pianohacker/quickprom/cmd/quickprom
 | `-k, --skip-tls-verify` | Don't verify remote certificate (`QUICKPROM_SKIP_TLS_VERIFY`)  |
 | `--basic-auth USER:PASS` | Use basic authentication (`QUICKPROM_BASIC_AUTH`) |
 | `--cf-auth` | Automatically use current oAuth token from `cf` (`QUICKPROM_CF_AUTH`)  |
+| --json | Output JSON result (`QUICKPROM_JSON`) |
 
 ### Instant query options
 | Option | Description |
@@ -121,8 +122,6 @@ Instant vector:
 ## TODO
 
 - [ ] Range vectors as tables
-- [ ] JSON output
-- [ ] Acceptance tests of binary
 - [ ] Custom sorting
 - [ ] Sparklines
 - [ ] Scalar support
