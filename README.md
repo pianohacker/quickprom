@@ -63,66 +63,57 @@ Some examples:
 
 ```console
 $ export QUICKPROM_TARGET=http://promserver.example
-$ quickprom 'prometheus_engine_query_duration_seconds'
+$ quickprom 'prometheus_http_request_duration_seconds_bucket{le="1"}'
 Instant vector:
-  At: 2019-01-04 22:37:22.944 MST
-  All have labels: __name__: prometheus_engine_query_duration_seconds, instance: promserver.example, job: prometheus
+  At: 2019-01-06 18:45:50.132 MST
+  All have labels: __name__: prometheus_http_request_duration_seconds_bucket, instance: promserver.example, job: prometheus, le: 1
 
-  quantile  slice
-       0.5  inner_eval    0.000002
-       0.5  prepare_time  0.000004
-       0.5  queue_time    0.000001
-       0.5  result_sort   0.000001
-       0.9  inner_eval    0.000003
-       0.9  prepare_time  0.000007
-       0.9  queue_time    0.000002
-       0.9  result_sort   0.000001
-      0.99  inner_eval    0.000021
-      0.99  prepare_time  0.000017
-      0.99  queue_time    0.000003
-      0.99  result_sort   0.000001
+ handler             
+ /                      128 
+ /alerts                 58 
+ /config                 16 
+ /consoles/*filepath    877 
+ /flags                  16 
+ /graph                 246 
+ /label/:name/values    220 
+ /metrics             32197 
+ /query               19216 
+ /query_range         28551 
+ /rules                   5 
+ /series                725 
+ /service-discovery       6 
+ /static/*filepath     3900 
+ /status                 13 
+ /targets                12
 $ quickprom range 'prometheus_engine_query_duration_seconds' --start '1:00' --end '2:00' --step '30m' --range-table
 Range vector:
   All have labels: __name__: prometheus_engine_query_duration_seconds, instance: promserver.example, job: prometheus
   All on date: 2019-01-04
   All timestamps end with: 00.000
 
- quantile  slice         01:00     01:30     02:00
- 0.5       inner_eval    0.000002  0.000002  0.000002
- 0.5       prepare_time  0.000004  0.000004  0.000004
- 0.5       queue_time    0.000001  0.000001  0.000001
- 0.5       result_sort   0.000001  0.000001  0.000001
- 0.9       inner_eval    0.000003  0.000003  0.000003
- 0.9       prepare_time  0.000007  0.000007  0.000007
- 0.9       queue_time    0.000002  0.000002  0.000002
- 0.9       result_sort   0.000001  0.000001  0.000002
- 0.99      inner_eval    0.000017  0.000023  0.000016
- 0.99      prepare_time  0.000020  0.000019  0.000017
- 0.99      queue_time    0.000003  0.000003  0.000003
- 0.99      result_sort   0.000003  0.000003  0.000003
-$ quickprom 'avg_over_time(prometheus_engine_query_duration_seconds[30s])' --time '4:00'
+ quantile  slice              01:00       01:30       02:00 
+ 0.5       inner_eval    2.0050e-06  1.9370e-06  1.9890e-06 
+ 0.5       prepare_time  4.4220e-06  4.2300e-06  4.3320e-06 
+ 0.5       queue_time    1.4100e-06  1.3750e-06  1.3830e-06 
+ 0.5       result_sort   7.5900e-07  7.5800e-07  8.7700e-07 
+ 0.9       inner_eval    3.2960e-06  3.1980e-06  3.3870e-06 
+ 0.9       prepare_time  6.8050e-06  6.7350e-06  6.9200e-06 
+ 0.9       queue_time    2.0240e-06  1.9610e-06  2.0500e-06 
+ 0.9       result_sort   1.2450e-06  1.1230e-06  1.1610e-06 
+ 0.99      inner_eval    2.4959e-05  1.7474e-05  2.6921e-05 
+ 0.99      prepare_time  1.8459e-05  1.8900e-05  1.8408e-05 
+ 0.99      queue_time    3.2850e-06  3.1800e-06  4.2550e-06 
+ 0.99      result_sort   1.2450e-06  1.2810e-06  1.1610e-06
+$ quickprom 'node_timex_status'
 Instant vector:
-  At: 2019-01-04 04:00:00.000 MST
-  All have labels: instance: promserver.example, job: prometheus
+  At: 2019-01-06 18:10:05.628 MST
 
-  quantile  slice
-       0.5  inner_eval    0.000002
-       0.5  prepare_time  0.000004
-       0.5  queue_time    0.000001
-       0.5  result_sort   0.000001
-       0.9  inner_eval    0.000003
-       0.9  prepare_time  0.000007
-       0.9  queue_time    0.000002
-       0.9  result_sort   0.000001
-      0.99  inner_eval    0.000021
-      0.99  prepare_time  0.000017
-      0.99  queue_time    0.000003
-      0.99  result_sort   0.000001
+ __name__           instance            job
+ node_timex_status  promserver.example  node  8193
 ```
 
 ## TODO
 
-- [ ] Better automatic value formatting
 - [ ] Automatically enable range tables, disable when terminal too narrow (needs a decent heuristic)
 - [ ] Custom sorting
 - [ ] Sparklines

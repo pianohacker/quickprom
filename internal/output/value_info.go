@@ -1,6 +1,9 @@
 package output
 
 import (
+	"fmt"
+	"math"
+	"regexp"
 	"sort"
 	"time"
 
@@ -8,9 +11,12 @@ import (
 )
 
 type ValueInfo struct {
-	labelInfo      labelInfoMap
-	length         int
-	seenTimestamps map[model.Time]struct{}
+	labelInfo          labelInfoMap
+	length             int
+	seenTimestamps     map[model.Time]struct{}
+	MaxValueExp        int
+	MinValueExp        int
+	MaxValueFracLength int
 }
 
 type labelInfoMap map[string]*labelInfo
@@ -19,13 +25,20 @@ type labelInfo struct {
 	occurrences int
 }
 
+const MaxInt = int(^uint(0) >> 1)
+const MinInt = -MaxInt - 1
+
 func InstantVectorInfo(instantVector model.Vector) *ValueInfo {
 	v := &ValueInfo{
-		labelInfo: make(labelInfoMap),
+		labelInfo:          make(labelInfoMap),
+		MinValueExp:        MaxInt,
+		MaxValueExp:        MinInt,
+		MaxValueFracLength: 0,
 	}
 
 	for _, sample := range instantVector {
 		v.addMetric(sample.Metric)
+		v.addValue(sample.Value)
 	}
 	v.length = len(instantVector)
 
@@ -34,6 +47,7 @@ func InstantVectorInfo(instantVector model.Vector) *ValueInfo {
 			instantVector[0].Timestamp: struct{}{},
 		}
 	}
+	v.normalizeValueInfo()
 
 	return v
 }
@@ -48,8 +62,10 @@ func RangeVectorInfo(rangeVector model.Matrix) *ValueInfo {
 		v.addMetric(series.Metric)
 		for _, sample := range series.Values {
 			v.addTimestamp(sample.Timestamp)
+			v.addValue(sample.Value)
 		}
 	}
+	v.normalizeValueInfo()
 	v.length = len(rangeVector)
 
 	return v
@@ -70,6 +86,43 @@ func (v *ValueInfo) addMetric(metric model.Metric) {
 				},
 			}
 		}
+	}
+}
+
+var fracMatcher = regexp.MustCompile(`^\d+\.(\d+)`)
+
+func (v *ValueInfo) addValue(sampleValue model.SampleValue) {
+	val := float64(sampleValue)
+	if val == 0 {
+		return
+	}
+
+	valExp := int(math.Floor(math.Log10(val)))
+
+	if valExp < v.MinValueExp {
+		v.MinValueExp = valExp
+	}
+
+	if valExp > v.MaxValueExp {
+		v.MaxValueExp = valExp
+	}
+
+	shortestFormat := fmt.Sprintf("%g", val)
+	fracMatch := fracMatcher.FindStringSubmatchIndex(shortestFormat)
+
+	if fracMatch != nil {
+		fracLength := fracMatch[3] - fracMatch[2]
+
+		if fracLength > v.MaxValueFracLength {
+			v.MaxValueFracLength = fracLength
+		}
+	}
+}
+
+func (v *ValueInfo) normalizeValueInfo() {
+	if v.MinValueExp == MaxInt || v.MaxValueExp == MinInt {
+		v.MinValueExp = 0
+		v.MaxValueExp = 0
 	}
 }
 

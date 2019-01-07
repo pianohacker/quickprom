@@ -68,9 +68,14 @@ func (f *FormattedInstantVector) RenderText(_ *RenderOptions) {
 	outputCommonLabels(f.CommonLabels)
 
 	// Value column
-	header := append(f.VaryingLabels, "")
+	var header []interface{}
+
+	for _, labelName := range f.VaryingLabels {
+		header = append(header, bold(labelName))
+	}
 
 	tw := getTableWriter(header)
+	floatFormat := f.BestFloatFormat()
 
 	for _, sample := range f.Samples {
 		var row []interface{}
@@ -80,7 +85,7 @@ func (f *FormattedInstantVector) RenderText(_ *RenderOptions) {
 		}
 
 		row = append(row, termtables.CreateCell(
-			fmt.Sprintf("%f", sample.Value),
+			fmt.Sprintf(floatFormat, sample.Value),
 			&termtables.CellStyle{
 				Alignment: termtables.AlignRight,
 			},
@@ -117,66 +122,78 @@ func (f *FormattedRangeVector) RenderText(opts *RenderOptions) {
 	timestampFormat := getTimestampFormat(sharedDateParts)
 
 	if opts.RangeVectorAsTable {
-		// Value column
-		header := f.VaryingLabels
-
-		for _, seenTime := range f.SeenTimes {
-			header = append(header, seenTime.Format(timestampFormat))
-		}
-
-		tw := getTableWriter(header)
-
-		for _, series := range f.Series {
-			var row []interface{}
-
-			for _, labelValue := range series.LabelValues {
-				row = append(row, labelValue)
-			}
-
-			samplePos := 0
-			for _, seenTime := range f.SeenTimes {
-				for samplePos < len(series.Values) && series.Values[samplePos].Time != seenTime {
-					samplePos++
-				}
-
-				if samplePos < len(series.Values) {
-					row = append(row, termtables.CreateCell(
-						fmt.Sprintf("%f", series.Values[samplePos].Value),
-						&termtables.CellStyle{
-							Alignment: termtables.AlignRight,
-						},
-					))
-				}
-			}
-
-			tw.AddRow(row...)
-		}
-
-		for i := len(f.VaryingLabels); i < len(header); i++ {
-			tw.SetAlign(termtables.AlignRight, i+1)
-		}
-
-		fmt.Print(tw.Render())
+		f.renderRangeTable(timestampFormat)
 	} else {
-		fmt.Println()
+		f.renderRangeList(timestampFormat)
+	}
+}
 
-		for _, series := range f.Series {
-			for i, labelName := range f.VaryingLabels {
-				if i != 0 {
-					fmt.Print(", ")
-				}
-				fmt.Printf("%s %s", bold(labelName+":"), series.LabelValues[i])
-			}
-			fmt.Println(":")
+func (f *FormattedRangeVector) renderRangeTable(timestampFormat string) {
+	var header []interface{}
 
-			for _, sample := range series.Values {
-				fmt.Printf("    %s: %f\n", sample.Time.Format(timestampFormat), sample.Value)
+	for _, labelName := range f.VaryingLabels {
+		header = append(header, bold(labelName))
+	}
+
+	for _, seenTime := range f.SeenTimes {
+		header = append(header, rightAlignedCell(
+			bold(seenTime.Format(timestampFormat)),
+		))
+	}
+
+	tw := getTableWriter(header)
+
+	collatedValues := f.CollateSeriesValuesByTime()
+	floatFormat := f.BestFloatFormat()
+
+	for i, series := range f.Series {
+		var row []interface{}
+
+		for _, labelValue := range series.LabelValues {
+			row = append(row, labelValue)
+		}
+
+		for _, value := range collatedValues[i] {
+			if value == nil {
+				row = append(row, "")
+			} else {
+				row = append(row, rightAlignedCell(
+					fmt.Sprintf(floatFormat, *value),
+				))
 			}
+		}
+
+		tw.AddRow(row...)
+	}
+
+	fmt.Print(tw.Render())
+}
+
+func (f *FormattedRangeVector) renderRangeList(timestampFormat string) {
+	fmt.Println()
+	floatFormat := f.BestFloatFormat()
+
+	for _, series := range f.Series {
+		for i, labelName := range f.VaryingLabels {
+			if i != 0 {
+				fmt.Print(", ")
+			}
+			fmt.Printf("%s %s", bold(labelName+":"), series.LabelValues[i])
+		}
+		fmt.Println(":")
+
+		for _, sample := range series.Values {
+			fmt.Printf("    %s: ", sample.Time.Format(timestampFormat))
+			fmt.Printf(floatFormat + "\n", sample.Value)
 		}
 	}
 }
 
 func outputCommonLabels(commonLabels map[string]string) {
+	if len(commonLabels) == 0 {
+		return
+	}
+
 	var labels []string
 	for labelName, _ := range commonLabels {
 		labels = append(labels, labelName)
@@ -193,19 +210,14 @@ func outputCommonLabels(commonLabels map[string]string) {
 	fmt.Println()
 }
 
-func getTableWriter(headers []string) *termtables.Table {
+func getTableWriter(headers []interface{}) *termtables.Table {
 	tt := termtables.CreateTable()
 	tt.Style.SkipBorder = true
 	tt.Style.BorderX = ""
 	tt.Style.BorderY = ""
 	tt.Style.BorderI = ""
 
-	var headerVals []interface{}
-	for _, header := range headers {
-		headerVals = append(headerVals, bold(header))
-	}
-
-	tt.AddHeaders(headerVals...)
+	tt.AddHeaders(headers...)
 
 	return tt
 }
@@ -219,6 +231,15 @@ func bold(s string) string {
 }
 
 var outputIsATty = isatty.IsTerminal(os.Stdout.Fd())
+
+func rightAlignedCell(s string) *termtables.Cell {
+	return termtables.CreateCell(
+		s,
+		&termtables.CellStyle{
+			Alignment: termtables.AlignRight,
+		},
+	)
+}
 
 type jsonValue struct {
 	ResultType model.ValueType `json:"resultType"`

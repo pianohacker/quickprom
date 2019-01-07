@@ -310,6 +310,99 @@ var _ = Describe("Formatting", func() {
 			mktime(2006, 1, 2, 5, 4, 0, 1),
 		),
 	)
+
+	Describe("CollateSeriesValuesByTime", func() {
+		It("fills gaps with nil", func() {
+			rangeVector := model.Matrix{
+				{
+					Values: []model.SamplePair{
+						{
+							Timestamp: 1,
+							Value:     11,
+						},
+						{
+							Timestamp: 3,
+							Value:     13,
+						},
+					},
+				},
+				{
+					Values: []model.SamplePair{
+						{
+							Timestamp: 2,
+							Value:     12,
+						},
+						{
+							Timestamp: 4,
+							Value:     14,
+						},
+					},
+				},
+			}
+			formatted := output.FormatRangeVector(rangeVector)
+
+			Expect(formatted.CollateSeriesValuesByTime()).To(Equal([][]*float64{
+				{fptr(11), nil, fptr(13), nil},
+				{nil, fptr(12), nil, fptr(14)},
+			}))
+		})
+	})
+
+	DescribeTable("BestFloatFormat",
+		func(f *output.FormattedValue, expected string) {
+			Expect(f.BestFloatFormat()).To(Equal(expected))
+		},
+
+		Entry(
+			"small integers",
+			&output.FormattedValue{
+				MinValueExp:        0,
+				MaxValueExp:        1,
+				MaxValueFracLength: 0,
+			},
+			"%.0f",
+		),
+
+		Entry(
+			"small fractions",
+			&output.FormattedValue{
+				MinValueExp:        0,
+				MaxValueExp:        1,
+				MaxValueFracLength: 3,
+			},
+			"%.3f",
+		),
+
+		Entry(
+			"over-precise fractions",
+			&output.FormattedValue{
+				MinValueExp:        1,
+				MaxValueExp:        1,
+				MaxValueFracLength: 7,
+			},
+			"%.6f",
+		),
+
+		Entry(
+			"tiny fractions",
+			&output.FormattedValue{
+				MinValueExp:        -6,
+				MaxValueExp:        1,
+				MaxValueFracLength: 3,
+			},
+			"%.3e",
+		),
+
+		Entry(
+			"small fractions",
+			&output.FormattedValue{
+				MinValueExp:        0,
+				MaxValueExp:        10,
+				MaxValueFracLength: 5,
+			},
+			"%.5e",
+		),
+	)
 })
 
 func mktime(y int, mo time.Month, d int, h, m, s, ms int) time.Time {
@@ -319,4 +412,8 @@ func mktime(y int, mo time.Month, d int, h, m, s, ms int) time.Time {
 		ms*1e6,
 		time.Local,
 	)
+}
+
+func fptr(f float64) *float64 {
+	return &f
 }

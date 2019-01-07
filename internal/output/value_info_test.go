@@ -199,4 +199,112 @@ var _ = Describe("Value Info", func() {
 			}))
 		})
 	})
+
+	Describe("ValueInfo", func() {
+		It("supports instant vectors", func() {
+			info := output.InstantVectorInfo(model.Vector{
+				{
+					Value: 60,
+				},
+				{
+					Value: 0.125,
+				},
+			})
+
+			Expect(info.MaxValueExp).To(Equal(1))
+			Expect(info.MinValueExp).To(Equal(-1))
+			Expect(info.MaxValueFracLength).To(Equal(3))
+		})
+
+		It("supports fraction length for huge values", func() {
+			info := output.InstantVectorInfo(model.Vector{
+				{
+					Value: 1.125e10,
+				},
+				{
+					Value: 1.5e10,
+				},
+			})
+
+			Expect(info.MaxValueExp).To(Equal(10))
+			Expect(info.MinValueExp).To(Equal(10))
+			Expect(info.MaxValueFracLength).To(Equal(3))
+		})
+
+		It("supports fraction length for tiny values", func() {
+			info := output.InstantVectorInfo(model.Vector{
+				{
+					Value: 1.125e-10,
+				},
+				{
+					Value: 1.5e-10,
+				},
+			})
+
+			Expect(info.MaxValueExp).To(Equal(-10))
+			Expect(info.MinValueExp).To(Equal(-10))
+			Expect(info.MaxValueFracLength).To(Equal(3))
+		})
+
+		It("ignores 0", func() {
+			info := output.InstantVectorInfo(model.Vector{
+				{
+					Value: 1.125e10,
+				},
+				{
+					Value: 0,
+				},
+			})
+
+			Expect(info.MaxValueExp).To(Equal(10))
+			Expect(info.MinValueExp).To(Equal(10))
+		})
+
+		It("returns 0 if no nonzero values are seen", func() {
+			info := output.InstantVectorInfo(model.Vector{
+				{
+					Value: 0,
+				},
+				{
+					Value: 0,
+				},
+			})
+
+			Expect(info.MaxValueExp).To(Equal(0))
+			Expect(info.MinValueExp).To(Equal(0))
+		})
+
+		It("supports range vectors", func() {
+			info := output.RangeVectorInfo(model.Matrix{
+				{
+					Values: []model.SamplePair{
+						{
+							Value: 46,
+						},
+						{
+							Value: 6,
+						},
+					},
+				},
+				{
+					Values: []model.SamplePair{
+						{
+							Value: 622,
+						},
+					},
+				},
+				{
+					Values: []model.SamplePair{
+						{
+							Value: 4666,
+						},
+					},
+				},
+			})
+
+			Expect(info.MaxValueExp).To(Equal(3))
+			Expect(info.MinValueExp).To(Equal(0))
+			Expect(info.MaxValueFracLength).To(Equal(0))
+		})
+	})
 })
