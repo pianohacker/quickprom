@@ -65,7 +65,7 @@ func (f *FormattedInstantVector) RenderText(_ *RenderOptions) {
 
 	fmt.Printf("  At: %s\n", f.Time.Format(TimeFormatWithTZ))
 
-	outputCommonLabels(f.CommonLabels)
+	outputCommonLabels("samples", f.CommonLabels)
 
 	// Value column
 	var header []interface{}
@@ -73,6 +73,8 @@ func (f *FormattedInstantVector) RenderText(_ *RenderOptions) {
 	for _, labelName := range f.VaryingLabels {
 		header = append(header, bold(labelName))
 	}
+
+	header = append(header, bold("value"))
 
 	tw := getTableWriter(header)
 	floatFormat := f.BestFloatFormat()
@@ -84,11 +86,8 @@ func (f *FormattedInstantVector) RenderText(_ *RenderOptions) {
 			row = append(row, labelValue)
 		}
 
-		row = append(row, termtables.CreateCell(
+		row = append(row, rightAlignedCell(
 			fmt.Sprintf(floatFormat, sample.Value),
-			&termtables.CellStyle{
-				Alignment: termtables.AlignRight,
-			},
 		))
 
 		tw.AddRow(row...)
@@ -105,8 +104,6 @@ func (f *FormattedRangeVector) RenderText(opts *RenderOptions) {
 	}
 	fmt.Println()
 
-	outputCommonLabels(f.CommonLabels)
-
 	sharedDateParts := SharedDateParts(f.SeenTimes)
 
 	if sharedDateParts.Date {
@@ -118,6 +115,8 @@ func (f *FormattedRangeVector) RenderText(opts *RenderOptions) {
 	} else if sharedDateParts.ZeroMillisecond {
 		fmt.Println("  All timestamps end with: .000")
 	}
+
+	outputCommonLabels("series", f.CommonLabels)
 
 	timestampFormat := getTimestampFormat(sharedDateParts)
 
@@ -189,7 +188,7 @@ func (f *FormattedRangeVector) renderRangeList(timestampFormat string) {
 	}
 }
 
-func outputCommonLabels(commonLabels map[string]string) {
+func outputCommonLabels(subValueType string, commonLabels map[string]string) {
 	if len(commonLabels) == 0 {
 		return
 	}
@@ -200,14 +199,10 @@ func outputCommonLabels(commonLabels map[string]string) {
 	}
 	sort.Sort(sort.StringSlice(labels))
 
-	fmt.Print("  All have labels: ")
-	for i, labelName := range labels {
-		if i != 0 {
-			fmt.Print(", ")
-		}
-		fmt.Printf("%s %s", bold(labelName+":"), commonLabels[labelName])
+	fmt.Printf("  All %s are labeled: \n", subValueType)
+	for _, labelName := range labels {
+		fmt.Printf("    %s %s\n", bold(labelName+":"), commonLabels[labelName])
 	}
-	fmt.Println()
 }
 
 func getTableWriter(headers []interface{}) *termtables.Table {

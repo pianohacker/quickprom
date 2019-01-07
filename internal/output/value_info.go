@@ -156,10 +156,6 @@ func (v *ValueInfo) VaryingLabels() (varyingLabels []string) {
 }
 
 func (v *ValueInfo) isLabelCommon(labelName string) bool {
-	if v.length <= 1 {
-		return false
-	}
-
 	info := v.labelInfo[labelName]
 	return len(info.valueSet) == 1 && info.occurrences == v.length
 }

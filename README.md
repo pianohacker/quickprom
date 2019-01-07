@@ -9,6 +9,8 @@ using the Prometheus API.
 - Automatically summarizes data:
 	- Collapses labels that are shared between samples/series
 	- Only shows date once if it's the same between all series
+	- Truncates seconds and milliseconds if they're zero for all samples
+	- Tries to format all values identically, using the minimum number of digits
 - Supports basic authentication, or automatically using authorization from your CloudFoundry CLI session
 
 ## Installation
@@ -31,7 +33,8 @@ $ GO111MODULE=on go get github.com/pianohacker/quickprom/cmd/quickprom
 | `-k, --skip-tls-verify` | Don't verify remote certificate (`QUICKPROM_SKIP_TLS_VERIFY`)  |
 | `--basic-auth USER:PASS` | Use basic authentication (`QUICKPROM_BASIC_AUTH`) |
 | `--cf-auth` | Automatically use current oAuth token from `cf` (`QUICKPROM_CF_AUTH`)  |
-| --json | Output JSON result (`QUICKPROM_JSON`) |
+| `--json` | Output JSON result (`QUICKPROM_JSON`) |
+| `-b, --range-table` | Output range vectors as tables (`QUICKPROM_RANGE_TABLE`) |
 
 ### Instant query options
 | Option | Description |
@@ -66,9 +69,13 @@ $ export QUICKPROM_TARGET=http://promserver.example
 $ quickprom 'prometheus_http_request_duration_seconds_bucket{le="1"}'
 Instant vector:
   At: 2019-01-06 18:45:50.132 MST
-  All have labels: __name__: prometheus_http_request_duration_seconds_bucket, instance: promserver.example, job: prometheus, le: 1
+  All samples have labels:
+    __name__: prometheus_http_request_duration_seconds_bucket
+    instance: promserver.example
+    job: prometheus
+    le: 1
 
- handler             
+ handler              value
  /                      128 
  /alerts                 58 
  /config                 16 
@@ -87,9 +94,12 @@ Instant vector:
  /targets                12
 $ quickprom range 'prometheus_engine_query_duration_seconds' --start '1:00' --end '2:00' --step '30m' --range-table
 Range vector:
-  All have labels: __name__: prometheus_engine_query_duration_seconds, instance: promserver.example, job: prometheus
   All on date: 2019-01-04
   All timestamps end with: 00.000
+  All series have labels:
+    __name__: prometheus_engine_query_duration_seconds
+    instance: promserver.example
+    job: prometheus
 
  quantile  slice              01:00       01:30       02:00 
  0.5       inner_eval    2.0050e-06  1.9370e-06  1.9890e-06 
@@ -107,9 +117,13 @@ Range vector:
 $ quickprom 'node_timex_status'
 Instant vector:
   At: 2019-01-06 18:10:05.628 MST
+  All series have labels:
+    __name__: node_timex_status
+    instance: promserver
+    job: node
 
- __name__           instance            job
- node_timex_status  promserver.example  node  8193
+ value
+  8193
 ```
 
 ## TODO

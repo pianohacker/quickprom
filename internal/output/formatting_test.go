@@ -33,10 +33,11 @@ var _ = Describe("Formatting", func() {
 
 			Expect(formatted.Empty).To(BeFalse())
 			Expect(formatted.Time).To(BeTemporally("~", time.Unix(0, 4e6)))
-			Expect(formatted.CommonLabels).To(BeEmpty())
-			Expect(formatted.VaryingLabels).To(ConsistOf("label"))
+			Expect(formatted.CommonLabels).To(Equal(map[string]string{
+				"label": "value",
+			}))
+			Expect(formatted.VaryingLabels).To(BeEmpty())
 			Expect(formatted.Samples).To(ContainElement(output.FormattedSample{
-				LabelValues: []string{"value"},
 				Value:       123,
 			}))
 		})
@@ -121,13 +122,14 @@ var _ = Describe("Formatting", func() {
 			})
 
 			Expect(formatted.Empty).To(BeFalse())
-			Expect(formatted.CommonLabels).To(BeEmpty())
-			Expect(formatted.VaryingLabels).To(ConsistOf("label"))
+			Expect(formatted.CommonLabels).To(Equal(map[string]string{
+				"label": "value",
+			}))
+			Expect(formatted.VaryingLabels).To(BeEmpty())
 			Expect(formatted.MinTime).To(BeTemporally("~", time.Unix(0, 1e6)))
 			Expect(formatted.MaxTime).To(BeTemporally("~", time.Unix(0, 2e6)))
 			Expect(formatted.Series).To(Equal([]output.FormattedSeries{
 				{
-					LabelValues: []string{"value"},
 					Values: []output.FormattedSamplePair{
 						{
 							Time:  time.Unix(0, 1e6),

@@ -12,7 +12,7 @@ import (
 
 var _ = Describe("Value Info", func() {
 	Describe("CommonLabels/VaryingLabels", func() {
-		It("does not consider labels common for a 1-element value", func() {
+		It("considers all labels common for a 1-element value", func() {
 			info := output.InstantVectorInfo(model.Vector{
 				{
 					Metric: model.Metric{
@@ -22,8 +22,11 @@ var _ = Describe("Value Info", func() {
 				},
 			})
 
-			Expect(info.CommonLabels()).To(BeEmpty())
-			Expect(info.VaryingLabels()).To(Equal([]string{"a", "b"}))
+			Expect(info.CommonLabels()).To(Equal(map[string]string{
+				"a": "a",
+				"b": "b",
+			}))
+			Expect(info.VaryingLabels()).To(BeEmpty())
 		})
 
 		It("includes common labels", func() {
