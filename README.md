@@ -17,7 +17,9 @@ using the Prometheus API.
 Go 1.11 is required.
 
 ```console
-$ GO111MODULE=on go get github.com/pianohacker/quickprom/cmd/quickprom
+$ git clone https://github.com/pianohacker/quickprom
+$ cd quickprom
+$ GO111MODULE=on go install ./cmd/quickprom
 ```
 
 ## Usage
