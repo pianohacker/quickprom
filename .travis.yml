@@ -1,0 +1,21 @@
+language: go
+
+go:
+  - 1.10.x
+  - 1.11.x
+os:
+  - linux
+  - osx
+
+script:
+- env GO111MODULE=on go build
+- env GO111MODULE=on go test
+
+# calls goreleaser
+deploy:
+- provider: script
+  skip_cleanup: true
+  script: curl -sL https://git.io/goreleaser | bash
+  on:
+    tags: true
+    condition: $TRAVIS_OS_NAME = linux
