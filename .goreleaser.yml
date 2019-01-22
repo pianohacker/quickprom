@@ -18,7 +18,7 @@ builds:
     # Defaults are darwin and linux.
     goos:
       - linux
-      - macosx
+      - darwin
 
     # GOARCH to build for.
     # For more info refer to: https://golang.org/doc/install/source#environment
