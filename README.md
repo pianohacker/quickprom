@@ -1,4 +1,7 @@
 # quickprom
+
+[![Build Status](https://travis-ci.com/pianohacker/quickprom.svg?branch=master)](https://travis-ci.com/pianohacker/quickprom)
+
 ## a quick analysis tool for Prometheus-compatible time-series databases
 
 `quickprom` fills the gulf between full-blown visualization tools like Grafana and manual analysis
