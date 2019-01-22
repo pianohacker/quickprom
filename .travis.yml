@@ -6,10 +6,12 @@ go:
 os:
   - linux
   - osx
+env:
+  - GO111MODULE=on
 
 install: false
 script:
-- env GO111MODULE=on go test ./...
+- go test ./...
 
 # calls goreleaser
 deploy:
