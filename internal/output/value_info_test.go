@@ -309,5 +309,15 @@ var _ = Describe("Value Info", func() {
 			Expect(info.MinValueExp).To(Equal(0))
 			Expect(info.MaxValueFracLength).To(Equal(0))
 		})
+
+		It("supports scalars", func() {
+			info := output.ScalarInfo(&model.Scalar{
+				Value: 546.2,
+			})
+
+			Expect(info.MaxValueExp).To(Equal(2))
+			Expect(info.MinValueExp).To(Equal(2))
+			Expect(info.MaxValueFracLength).To(Equal(1))
+		})
 	})
 })

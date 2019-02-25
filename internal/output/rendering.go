@@ -46,6 +46,8 @@ type RenderOptions struct {
 
 func FormatValue(value model.Value) Renderable {
 	switch value.Type() {
+	case model.ValScalar:
+		return FormatScalar(value.(*model.Scalar))
 	case model.ValVector:
 		return FormatInstantVector(value.(model.Vector))
 	case model.ValMatrix:
@@ -53,6 +55,21 @@ func FormatValue(value model.Value) Renderable {
 	}
 
 	return nil
+}
+
+func (f *FormattedScalar) RenderText(_ *RenderOptions) {
+	fmt.Print("Scalar:")
+	if f.Empty {
+		fmt.Println(" (empty result)")
+		return
+	}
+	fmt.Println()
+
+	fmt.Printf("  At: %s\n", f.Time.Format(TimeFormatWithTZ))
+
+	tw := getTableWriter([]interface{}{bold("value")})
+	tw.AddRow(fmt.Sprintf("%g", f.Value))
+	fmt.Print(tw.Render())
 }
 
 func (f *FormattedInstantVector) RenderText(_ *RenderOptions) {
@@ -183,7 +200,7 @@ func (f *FormattedRangeVector) renderRangeList(timestampFormat string) {
 
 		for _, sample := range series.Values {
 			fmt.Printf("    %s: ", sample.Time.Format(timestampFormat))
-			fmt.Printf(floatFormat + "\n", sample.Value)
+			fmt.Printf(floatFormat+"\n", sample.Value)
 		}
 	}
 }

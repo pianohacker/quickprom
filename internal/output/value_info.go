@@ -28,6 +28,22 @@ type labelInfo struct {
 const MaxInt = int(^uint(0) >> 1)
 const MinInt = -MaxInt - 1
 
+func ScalarInfo(scalar *model.Scalar) *ValueInfo {
+	if scalar == nil {
+		return nil
+	}
+
+	v := &ValueInfo{
+		MinValueExp:        MaxInt,
+		MaxValueExp:        MinInt,
+		MaxValueFracLength: 0,
+	}
+
+	v.addValue(scalar.Value)
+
+	return v
+}
+
 func InstantVectorInfo(instantVector model.Vector) *ValueInfo {
 	v := &ValueInfo{
 		labelInfo:          make(labelInfoMap),

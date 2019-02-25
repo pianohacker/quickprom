@@ -16,6 +16,11 @@ type FormattedValue struct {
 	VaryingLabels      []string
 }
 
+type FormattedScalar struct {
+	FormattedValue
+	FormattedSamplePair
+}
+
 type FormattedInstantVector struct {
 	FormattedValue
 	Time    time.Time
@@ -43,6 +48,28 @@ type FormattedSeries struct {
 type FormattedSamplePair struct {
 	Time  time.Time
 	Value float64
+}
+
+func FormatScalar(s *model.Scalar) *FormattedScalar {
+	if s == nil {
+		return &FormattedScalar{
+			FormattedValue: FormattedValue{
+				Empty: true,
+			},
+		}
+	}
+
+	result := &FormattedScalar{}
+
+	info := ScalarInfo(s)
+	result.MinValueExp = info.MinValueExp
+	result.MaxValueExp = info.MaxValueExp
+	result.MaxValueFracLength = info.MaxValueFracLength
+
+	result.Time = s.Timestamp.Time()
+	result.Value = float64(s.Value)
+
+	return result
 }
 
 func FormatInstantVector(v model.Vector) *FormattedInstantVector {

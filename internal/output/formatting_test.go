@@ -38,7 +38,7 @@ var _ = Describe("Formatting", func() {
 			}))
 			Expect(formatted.VaryingLabels).To(BeEmpty())
 			Expect(formatted.Samples).To(ContainElement(output.FormattedSample{
-				Value:       123,
+				Value: 123,
 			}))
 		})
 
@@ -229,6 +229,23 @@ var _ = Describe("Formatting", func() {
 					},
 				},
 			}))
+		})
+
+		It("can handle a empty scalar", func() {
+			formatted := output.FormatScalar(nil)
+
+			Expect(formatted.Empty).To(BeTrue())
+		})
+
+		It("can handle a scalar", func() {
+			formatted := output.FormatScalar(&model.Scalar{
+				Timestamp: 4,
+				Value:     123,
+			})
+
+			Expect(formatted.Empty).To(BeFalse())
+			Expect(formatted.Time).To(BeTemporally("~", time.Unix(0, 4e6)))
+			Expect(formatted.Value).To(BeEquivalentTo(123))
 		})
 	})
 
