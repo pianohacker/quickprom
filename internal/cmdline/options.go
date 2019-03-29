@@ -21,24 +21,26 @@ Usage:
   quickprom [options] range QUERY --start START [--end END] --step STEP
 
 Global options:
-  -t, --target TARGET     URL of Prometheus-compatible target 
-                          (QUICKPROM_TARGET)
-  -k, --skip-tls-verify   Don't verify remote certificate 
-                          (QUICKPROM_SKIP_TLS_VERIFY)
-  --basic-auth USER:PASS  Use basic authentication (QUICKPROM_BASIC_AUTH)
-  --cf-auth               Automatically use current oAuth token from ` + "`cf`" + `
-                          (QUICKPROM_CF_AUTH)
-  --json                  Output JSON result (QUICKPROM_JSON)
-  -b, --range-table       Output range vectors as tables (QUICKPROM_RANGE_TABLE)
+  -t, --target TARGET        URL of Prometheus-compatible target 
+                             (QUICKPROM_TARGET)
+  -k, --skip-tls-verify      Don't verify remote certificate 
+                             (QUICKPROM_SKIP_TLS_VERIFY)
+  --basic-auth USER:PASS     Use basic authentication (QUICKPROM_BASIC_AUTH)
+  --cf-auth                  Automatically use current oAuth token from ` + "`cf`" + `
+                             (QUICKPROM_CF_AUTH)
+  --json                     Output JSON result (QUICKPROM_JSON)
+  -b, --range-table          Output range vectors as tables (QUICKPROM_RANGE_TABLE)
+  --timeout DURATION         Maximum time to wait for response from server
+                             (QUICKPROM_TIMEOUT, defaults to 5s)
 
 Instant query options:
-  -i, --time TIME         Evaluate instant query at ` + "`TIME`" + `
-                          (defaults to now)
+  -i, --time TIME            Evaluate instant query at ` + "`TIME`" + `
+                             (defaults to now)
 
 Range query options:
-  -s, --start START       Start time of range query
-  -e, --end END           End time of range query (inclusive, defaults to now)
-  -p, --step STEP         Step of range query
+  -s, --start START          Start time of range query
+  -e, --end END              End time of range query (inclusive, defaults to now)
+  -p, --step STEP            Step of range query
 
 Timestamp format:
   quickprom uses the excellent fuzzytime library, and thus supports a number of 
@@ -62,6 +64,8 @@ type QuickPromOptions struct {
 	CfAuth        bool   `docopt:"--cf-auth" env:"QUICKPROM_CF_AUTH"`
 	Json          bool   `docopt:"--json" env:"QUICKPROM_JSON"`
 	RangeTable    bool   `docopt:"--range-table" env:"QUICKPROM_RANGE_TABLE"`
+	TimeoutInput  string `docopt:"--timeout" env:"QUICKPROM_TIMEOUT"`
+	Timeout       time.Duration
 
 	TimeInput string `docopt:"--time"`
 	Time      time.Time
@@ -78,7 +82,9 @@ type QuickPromOptions struct {
 }
 
 func ParseOptsAndEnv(exitOnError bool) (*QuickPromOptions, error) {
-	var opts QuickPromOptions
+	opts := QuickPromOptions{
+		Timeout: 5 * time.Second,
+	}
 
 	err := envstruct.Load(&opts)
 	if err != nil {
@@ -101,6 +107,14 @@ func ParseOptsAndEnv(exitOnError bool) (*QuickPromOptions, error) {
 
 		if len(basicAuthParts) != 2 {
 			return nil, errors.New("must specify basic auth as USER:PASS")
+		}
+	}
+
+	if opts.TimeoutInput != "" {
+		opts.Timeout, err = time.ParseDuration(opts.TimeoutInput)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse --timeout: %s", err)
 		}
 	}
 

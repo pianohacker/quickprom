@@ -227,6 +227,57 @@ var _ = Describe("Options", func() {
 			},
 		),
 
+		Entry("defaults --timeout to 5 seconds when not provided",
+			[]string{
+				"quickprom",
+				"query",
+			},
+			map[string]string{
+				"QUICKPROM_TARGET": "env_target",
+			},
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.Timeout).To(Equal(5 * time.Second))
+			},
+		),
+
+		Entry("can parse --timeout from command line",
+			[]string{
+				"quickprom",
+				"--timeout",
+				"10s",
+				"query",
+			},
+			map[string]string{
+				"QUICKPROM_TARGET": "env_target",
+			},
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.Timeout).To(Equal(10 * time.Second))
+			},
+		),
+
+		Entry("can parse --timeout from environment variable",
+			[]string{
+				"quickprom",
+				"query",
+			},
+			map[string]string{
+				"QUICKPROM_TARGET":  "env_target",
+				"QUICKPROM_TIMEOUT": "10s",
+			},
+
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(opts.Timeout).To(Equal(10 * time.Second))
+			},
+		),
+
 		Entry("supports a short option for --time",
 			[]string{
 				"quickprom",
@@ -443,6 +494,17 @@ var _ = Describe("Options", func() {
 			map[string]string{
 				"QUICKPROM_TARGET": "target",
 			},
+			func(opts *cmdline.QuickPromOptions, err error) {
+				Expect(err).To(HaveOccurred())
+			},
+		),
+
+		Entry("returns an error when timeout is invalid",
+			[]string{"quickprom", "--timeout", "potato", "query"},
+			map[string]string{
+				"QUICKPROM_TARGET": "target",
+			},
+
 			func(opts *cmdline.QuickPromOptions, err error) {
 				Expect(err).To(HaveOccurred())
 			},
