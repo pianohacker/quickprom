@@ -1,15 +1,15 @@
 language: go
 
 go:
-  - 1.10.x
-  - 1.11.x
+  - 1.14.x
+  - 1.15.x
 os:
   - linux
   - osx
 env:
   - GO111MODULE=on
 
-install: false
+install: skip
 script:
 - go test ./...
 
@@ -20,4 +20,4 @@ deploy:
   script: curl -sL https://git.io/goreleaser | bash
   on:
     tags: true
-    condition: $TRAVIS_OS_NAME = linux && $TRAVIS_GO_VERSION =~ ^1\.11
+    condition: $TRAVIS_OS_NAME = linux && $TRAVIS_GO_VERSION =~ ^1\.15
