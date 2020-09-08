@@ -1,7 +1,8 @@
 # .goreleaser.yml
-archive:
-  format: binary
-  name_template: "{{ .Binary }}_{{ .Os }}_{{ .Arch }}"
+archives:
+  -
+    format: binary
+    name_template: "{{ .Binary }}_{{ .Os }}_{{ .Arch }}"
 builds:
   # You can have multiple builds defined as a yaml list
   -
