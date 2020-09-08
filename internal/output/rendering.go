@@ -6,7 +6,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/apcera/termtables"
+	"github.com/xlab/termtables"
 	isatty "github.com/mattn/go-isatty"
 	"github.com/prometheus/common/model"
 )
